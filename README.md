@@ -48,6 +48,7 @@
 * [Persistent Vector Performance Summarised](https://hypirion.com/musings/persistent-vector-performance-summarised)
 * [Persistent vectors, Part 1 -- The landscape](https://dmiller.github.io/clojure-clr-next/general/2023/02/12/PersistentVector-part-1.html)
 * [Persistent vectors, Part 2 -- Immutability and persistence](https://dmiller.github.io/clojure-clr-next/general/2023/02/12/PersistentVector-part-2.html)
+* [Undo-redo and its effects on your architecture](https://www.philgiese.com/post/undo-redo-architecture)
 
 ### GitHub
 * [Persistent vector performance measurements and analysis ](https://github.com/hypirion/pvec-perf/tree/master)

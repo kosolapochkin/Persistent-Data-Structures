@@ -40,19 +40,19 @@
 ├── src/</br>
 │   ├── main/</br>
 │   │   ├── java/</br>
-│   │   │   └── pds/</br>
-│   │   │       ├── PersistentClasses/</br>
-│   │   │       │   └── PArray.java</br>
-│   │   │       └── UtilClasses/</br>
-│   │   │           ├── Head.java</br>
-│   │   │           ├── Node.java</br>
-│   │   │           └── VersionStack.java</br>
-│   │   └── resources/</br>
+│   │   │   ├── pds/</br>
+│   │   │   │   ├── PersistentClasses/</br>
+│   │   │   │   │   └── PArray.java</br>
+│   │   │   │   ├── UtilClasses/</br>
+│   │   │   │   │   ├── Head.java</br>
+│   │   │   │   │   ├── Node.java</br>
+│   │   │   │   │   └── VersionStack.java</br>
+│   │   ├── resources/</br>
 │   ├── test/</br>
 │   │   ├── java/</br>
-│   │   │   └── pds/</br>
-│   │   │       └── PArrayTest.java</br>
-│   │   └── resources/</br>
+│   │   │   ├── pds/</br>
+│   │   │   │   ├── PArrayTest.java</br>
+│   │   ├── resources/</br>
 
 ## API
 

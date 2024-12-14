@@ -37,22 +37,22 @@
 
 ## Структура проекта
 
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── pds/
-│   │   │       ├── PersistentClasses/
-│   │   │       │   └── PArray.java
-│   │   │       └── UtilClasses/
-│   │   │           ├── Head.java
-│   │   │           ├── Node.java
-│   │   │           └── VersionStack.java
-│   │   └── resources/
-│   └── test/
-│       ├── java/
-│       │   └── pds/
-│       │       └── PArrayTest.java
-│       └── resources/
+├── src/</br>
+│   ├── main/</br>
+│   │   ├── java/</br>
+│   │   │   └── pds/</br>
+│   │   │       ├── PersistentClasses/</br>
+│   │   │       │   └── PArray.java</br>
+│   │   │       └── UtilClasses/</br>
+│   │   │           ├── Head.java</br>
+│   │   │           ├── Node.java</br>
+│   │   │           └── VersionStack.java</br>
+│   │   └── resources/</br>
+│   └── test/</br>
+│       ├── java/</br>
+│       │   └── pds/</br>
+│       │       └── PArrayTest.java</br>
+│       └── resources/</br>
 
 ## API
 

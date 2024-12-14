@@ -35,6 +35,25 @@
 | --------------------------- | ------- |
 | Лапочкин Дмитрий Алексеевич | 24225.1 |
 
+## Структура проекта
+
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── pds/
+│   │   │       ├── PersistentClasses/
+│   │   │       │   └── PArray.java
+│   │   │       └── UtilClasses/
+│   │   │           ├── Head.java
+│   │   │           ├── Node.java
+│   │   │           └── VersionStack.java
+│   │   └── resources/
+│   └── test/
+│       ├── java/
+│       │   └── pds/
+│       │       └── PArrayTest.java
+│       └── resources/
+
 ## API
 
 ## Источники

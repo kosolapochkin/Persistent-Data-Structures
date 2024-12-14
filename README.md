@@ -48,11 +48,11 @@
 │   │   │           ├── Node.java</br>
 │   │   │           └── VersionStack.java</br>
 │   │   └── resources/</br>
-│   └── test/</br>
-│       ├── java/</br>
-│       │   └── pds/</br>
-│       │       └── PArrayTest.java</br>
-│       └── resources/</br>
+│   ├── test/</br>
+│   │   ├── java/</br>
+│   │   │   └── pds/</br>
+│   │   │       └── PArrayTest.java</br>
+│   │   └── resources/</br>
 
 ## API
 

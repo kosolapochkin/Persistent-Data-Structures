@@ -18,17 +18,11 @@ class PArrayTest {
     }
 
     @Test
-    void testGet() {
-        arr.addAll(Arrays.asList(1, 2, 3, 4));
-        assertEquals(2, arr.get(1));
-    }
-
-    @Test
     void testAdd() {
         arr.add(1);
         assertEquals("[1]", arr.toString());
     }
-
+    
     @Test
     void testAddByIndex() {
         arr.add(1);
@@ -42,6 +36,12 @@ class PArrayTest {
         arr.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
         assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", arr.toString());
         assertThrowsExactly(IllegalStateException.class, () -> arr.add(9));
+    }
+
+    @Test
+    void testGet() {
+        arr.addAll(Arrays.asList(1, 2, 3, 4));
+        assertEquals(2, arr.get(1));
     }
 
     @Test
@@ -60,7 +60,6 @@ class PArrayTest {
     @Test
     void testUndoRedo() {
         arr.addAll(Arrays.asList(1, 2, 3, 4));
-        System.out.println(arr.getVersionCount());
         assertEquals(2, arr.getVersionCount());
         assertEquals("[1, 2, 3, 4]", arr.toString());
 
@@ -130,7 +129,7 @@ class PArrayTest {
     }
 
     @Test
-    void testPersistentArrayClear() {
+    void testClear() {
         arr.addAll(Arrays.asList(1, 2, 3, 4, 5));
 
         arr.clear();
@@ -186,7 +185,7 @@ class PArrayTest {
 
 
     @Test
-    void testPairPArrays() {
+    void testPairs() {
         arr.addAll(Arrays.asList(1, 2, 3, 4));
         
         PArray<Integer> arrCopy = new PArray<>(arr);

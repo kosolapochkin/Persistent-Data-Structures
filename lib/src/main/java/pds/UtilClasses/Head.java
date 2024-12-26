@@ -2,9 +2,9 @@ package pds.UtilClasses;
 
 public class Head<E> {
     
-    private int size;
-    private int bitsPerNode;
-    private Node<E> root;
+    protected int size;
+    protected int bitsPerNode;
+    protected Node<E> root;
 
     public Head(int bitsPerNode) {
         this.size = 0;
@@ -36,5 +36,21 @@ public class Head<E> {
 
     public void setSize(int size) {
         this.size = size;
+    }
+
+    public int getBitsPerNode() {
+        return this.bitsPerNode;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setBitsPerNode(int bitsPerNode) {
+        this.bitsPerNode = bitsPerNode;
+    }
+
+    public void setRoot(Node<E> root) {
+        this.root = root;
     }
 }

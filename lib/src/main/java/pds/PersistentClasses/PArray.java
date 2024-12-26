@@ -6,19 +6,21 @@ import java.util.List;
 import pds.UtilClasses.VersionStack;
 import pds.UtilClasses.Head;
 import pds.UtilClasses.Node;
+import pds.UtilClasses.UndoRedoDataStructure;
 
-public class PArray<E> {
+/**
+ * Персистентный массив
+ */
+@SuppressWarnings("unchecked")
+public class PArray<E> implements UndoRedoDataStructure {
 
     private int depth;
     private int bitsPerNode;
-
     private int mask;
-
     private int maxSize;
     private int nodeSize;
-    
-    private VersionStack<E> innerVersionStack;
-    private VersionStack<E> outerVersionStack;
+    private VersionStack<E> thisVersionStack;
+    private VersionStack<E> nestedVersionStack;
 
     private PArray<E> parent;
 
@@ -33,54 +35,70 @@ public class PArray<E> {
         this.nodeSize = (int) Math.pow(2, bitsPerNode);
         this.mask = this.nodeSize - 1;
         Head<E> head = new Head<>(this.bitsPerNode);
-        this.innerVersionStack = new VersionStack<>(head);
-        this.outerVersionStack = new VersionStack<>();
+        this.thisVersionStack = new VersionStack<>(head);
+        this.nestedVersionStack = new VersionStack<>();
     }
 
     public PArray(PArray<E> other) {
         this(other.depth, other.bitsPerNode);
-        this.innerVersionStack.copy(other.innerVersionStack);
-        this.outerVersionStack.copy(other.outerVersionStack);
+        this.thisVersionStack.copy(other.thisVersionStack);
+        this.nestedVersionStack.copy(other.nestedVersionStack);
     }
 
-    public void newVersion(Head<E> head) {
+    public void newVersion(Object head) {
         if (this.parent != null) {
-            parent.outerVersionStack.getUndo().push(this);
+            parent.nestedVersionStack.getUndo().push(this);
         }
-        this.outerVersionStack.getUndo().push(null);
-        this.outerVersionStack.getRedo().clear();
-        this.innerVersionStack.newVersion(head);
+        this.nestedVersionStack.getUndo().push(null);
+        this.nestedVersionStack.getRedo().clear();
+        this.thisVersionStack.newVersion(head);
     }
 
+    /**
+     * Возвращает номер текущей версии массива
+     * 
+     * @return версия массива
+     */
     public int getCurrentVersion() {
-        return this.innerVersionStack.getCurrentVersion();
+        return this.thisVersionStack.getCurrentVersion();
     }
 
+    /**
+     * Возвращает число версий массива
+     * 
+     * @return число версий массива
+     */
     public int getVersionCount() {
-        return this.innerVersionStack.getVersionCount();
+        return this.thisVersionStack.getVersionCount();
     }
 
+    /**
+     * Совершает возврат к предыдущей версии массива
+     */
     public void undo() {
-        if (!this.outerVersionStack.getUndo().isEmpty()) {
-            Object peek = this.outerVersionStack.getUndo().peek();
+        if (!this.nestedVersionStack.getUndo().isEmpty()) {
+            Object peek = this.nestedVersionStack.getUndo().peek();
             if (peek == null) {
-                this.innerVersionStack.undo();
+                this.thisVersionStack.undo();
             } else {
-                ((PArray) peek).undo();
+                ((PArray<E>) peek).undo();
             }
-            this.outerVersionStack.getRedo().push(this.outerVersionStack.getUndo().pop());
+            this.nestedVersionStack.getRedo().push(this.nestedVersionStack.getUndo().pop());
         }
     }
 
+    /**
+     * Совершает переход к следующей версии массива
+     */
     public void redo() {
-        if (!this.outerVersionStack.getRedo().isEmpty()) {
-            Object peek = this.outerVersionStack.getRedo().peek();
+        if (!this.nestedVersionStack.getRedo().isEmpty()) {
+            Object peek = this.nestedVersionStack.getRedo().peek();
             if (peek == null) {
-                this.innerVersionStack.redo();
+                this.thisVersionStack.redo();
             } else {
-                ((PArray) peek).redo();
+                ((PArray<E>) peek).redo();
             }
-            this.outerVersionStack.getUndo().push(this.outerVersionStack.getRedo().pop());
+            this.nestedVersionStack.getUndo().push(this.nestedVersionStack.getRedo().pop());
         }
     }
 
@@ -100,14 +118,14 @@ public class PArray<E> {
 
     public void add(int index, E value) {
         setParent(value);
-        Head<E> prevHead = getHead();
-        checkIfFull(prevHead);
-        checkIndex(prevHead, index);
-        Node<E> leafNode = copyPathToIncrement(prevHead, index);
+        Head<E> oldHead = getHead();
+        checkIfFull(oldHead);
+        checkIndex(oldHead, index);
+        Node<E> leafNode = copyPathForIncrement(oldHead, index);
         leafNode.set(index & this.mask, value);
         Head<E> newHead = getHead();
-        for (int i = index; i < prevHead.size(); i++) {
-            add(newHead, (E) get(prevHead, i));
+        for (int i = index; i < oldHead.size(); i++) {
+            add(newHead, (E) get(oldHead, i));
         }
     }
 
@@ -125,20 +143,21 @@ public class PArray<E> {
 
     public void set(int index, E value) {
         setParent(value);
-        Head<E> prevHead = getHead();
-        checkIfEmpty(prevHead);
-        checkIndex(prevHead, index);
+        Head<E> oldHead = getHead();
+        checkIfEmpty(oldHead);
+        checkIndex(oldHead, index);
         Head<E> newHead = new Head<>(this.bitsPerNode);
-        newHead.copy(getHead());
+        newHead.copy(oldHead);
         newVersion(newHead);
         set(newHead, index, value);
     }
 
+    
     public E pop() {
-        Head<E> prevHead = getHead();
-        checkIfEmpty(prevHead);
+        Head<E> oldHead = getHead();
+        checkIfEmpty(oldHead);
         Head<E> newHead = new Head<>(this.bitsPerNode);
-        newHead.copy(prevHead);
+        newHead.copy(oldHead);
         newHead.setSize(newHead.size() - 1);
         newVersion(newHead);
         Node<E> node = copyPath(newHead, newHead.size());
@@ -148,15 +167,15 @@ public class PArray<E> {
     }
 
     public E remove(int index) {
-        Head<E> prevHead = getHead();
-        checkIndex(prevHead, index);
-        checkIfEmpty(prevHead);
-        Node<E> leafNode = copyPathToIncrement(prevHead, index);
+        Head<E> oldHead = getHead();
+        checkIndex(oldHead, index);
+        checkIfEmpty(oldHead);
+        Node<E> leafNode = copyPathForIncrement(oldHead, index);
         E value = (E) leafNode.pop();
         Head<E>newHead = getHead();
         newHead.setSize(newHead.size() - 1);
-        for (int i = index + 1; i < prevHead.size(); i++) {
-            add(newHead, (E) get(prevHead, i));
+        for (int i = index + 1; i < oldHead.size(); i++) {
+            add(newHead, (E) get(oldHead, i));
         }
         return value;
     }
@@ -196,10 +215,10 @@ public class PArray<E> {
         return node;
     }
 
-    private Node<E> copyPath(Head<E> head, int index) {
+    private Node<E> copyPath(Head<E> Head, int index) {
         Node<E> currentNode;
         Node<E> newNode;
-        currentNode = head.getRoot();
+        currentNode = Head.getRoot();
         for (int level = (this.depth - 1) * this.bitsPerNode; level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
             if (currentNode.isEmpty()) {
@@ -221,18 +240,17 @@ public class PArray<E> {
         return currentNode;
     }
 
-    private Node<E> copyPathToIncrement(Head<E> head, int index) {
-        Node<E> newNode;
+    private Node<E> copyPathForIncrement(Head<E> Head, int index) {
         int level = this.bitsPerNode * (depth - 1);
         Head<E> newHead = new Head<>(this.bitsPerNode);
-        newHead.partCopy(head, (index >> level) & this.mask);
+        newHead.partCopy(Head, (index >> level) & this.mask);
         newHead.setSize(index + 1);
         newVersion(newHead);
         Node<E> currentNode = newHead.getRoot();
         for (; level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
             int idNext = (index >> (level - this.bitsPerNode)) & this.mask;
-            newNode = new Node(this.bitsPerNode);
+            Node<E> newNode = new Node<>(this.bitsPerNode);
             newNode.partCopy((Node<E>) currentNode.get(id), idNext);
             currentNode.set(id, newNode);
             currentNode = newNode;
@@ -240,11 +258,11 @@ public class PArray<E> {
         return currentNode;
     }
 
-    private void clearPath(Head<E> head) {
+    private void clearPath(Head<E> Head) {
         Node<E> node;
-        int index = head.size();
+        int index = Head.size();
         List<Node<E>> pathNodes = new ArrayList<>();
-        node = head.getRoot();
+        node = Head.getRoot();
         pathNodes.add(node);
         for (int level = this.bitsPerNode * (this.depth - 1); level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & mask;
@@ -279,12 +297,12 @@ public class PArray<E> {
     }
 
     private Head<E> getHead() {
-        return (Head<E>) this.innerVersionStack.getCurrent();
+        return (Head<E>) this.thisVersionStack.getCurrent();
     }
 
-    private void setParent(Object object) {
+    public void setParent(Object object) {
         if (isPersistent(object)) {
-            ((PArray) object).parent = this;
+            ((PArray<E>) object).parent = this;
         }
     }
 
@@ -300,11 +318,15 @@ public class PArray<E> {
     }
 
     public boolean isFull() {
-        return getHead().size() == this.maxSize;
+        return isFull(getHead());
+    }
+
+    private boolean isFull(Head<E> head) {
+        return head.size() == this.maxSize;
     }
 
     private void checkIfFull(Head<E> head) {
-        if (isFull()) {
+        if (isFull(head)) {
             throw new IllegalStateException("Array is full");
         }
     }
@@ -314,7 +336,6 @@ public class PArray<E> {
             throw new IllegalStateException("Array is full");
         }
     }
-    
     
     public void checkIfEmpty(Head<E> head) {
         if (head.size() == 0) {
@@ -330,18 +351,17 @@ public class PArray<E> {
 
     public List<E> toList() {
         List<E> values;
-        Head<E> head = getHead();
-        if (head != null) {
+        Head<E> Head = getHead();
+        if (Head != null) {
             Object[] leafNodeValues;
-            values = new ArrayList<>(head.size());
-    
-            for (int i = 0; i < head.size(); i = i + this.nodeSize) {
-                leafNodeValues = getLeafNodeValues(head, i);
+            values = new ArrayList<>(Head.size());
+            for (int i = 0; i < Head.size(); i = i + this.nodeSize) {
+                leafNodeValues = getLeafNodeValues(Head, i);
                 for (int j = 0; j < this.nodeSize; j++) {
                     if (leafNodeValues[j] != null) {
                         Object value = leafNodeValues[j];
                         if (value instanceof PArray) {
-                            value = ((PArray) value).toList();
+                            value = ((PArray<E>) value).toList();
                         }
                         values.add((E) value);
                     }
@@ -356,4 +376,5 @@ public class PArray<E> {
     public String toString() {
         return this.toList().toString();
     }
+
 }

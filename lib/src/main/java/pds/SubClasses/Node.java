@@ -1,4 +1,4 @@
-package pds.UtilClasses;
+package pds.SubClasses;
 
 public class Node<E> {
     
@@ -12,13 +12,13 @@ public class Node<E> {
         this.content = new Object[this.size];
     }
 
-    public void copy(Node<E> node) {
+    public void clone(Node<E> node) {
         this.size = node.size;
         this.count = node.count;
         this.content = node.content.clone();
     }
 
-    public void partCopy(Node<E> node, int index) {
+    public void partClone(Node<E> node, int index) {
         this.size = node.size;
         this.count = index + 1;
         for (int i = 0; i <= index; i++) {
@@ -60,17 +60,5 @@ public class Node<E> {
 
     public boolean isFull() {
         return this.count == this.size;
-    }
-
-    public void checkIsFull () {
-        if (isFull()) {
-            throw new IllegalStateException("Node is full");
-        }
-    }
-
-    public void checkIsEmpty () {
-        if (isEmpty()) {
-            throw new IllegalStateException("Node is empty");
-        }
     }
 }

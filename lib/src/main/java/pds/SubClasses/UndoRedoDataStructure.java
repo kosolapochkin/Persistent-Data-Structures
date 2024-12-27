@@ -1,11 +1,11 @@
-package pds.UtilClasses;
+package pds.SubClasses;
 
 public interface UndoRedoDataStructure {
 
-    void newVersion(Object head);
+    private void newVersion(Object object) {};
+    private void setParent(Object object) {};
     void undo();
     void redo();
-    void setParent(Object object);
     int getCurrentVersion();
     int getVersionCount();
 

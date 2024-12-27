@@ -1,4 +1,4 @@
-package pds.UtilClasses;
+package pds.SubClasses;
 
 public class Head<E> {
     
@@ -12,18 +12,18 @@ public class Head<E> {
         this.root = new Node<>(bitsPerNode);
     }
 
-    public void copy(Head<E> other) {
+    public void clone(Head<E> other) {
         this.size = other.size;
         this.bitsPerNode = other.bitsPerNode;
         this.root = new Node<>(this.bitsPerNode);
-        this.root.copy(other.root);
+        this.root.clone(other.root);
     }
 
-    public void partCopy(Head<E> other, int index) {
+    public void partClone(Head<E> other, int index) {
         this.size = other.size;
         this.bitsPerNode = other.bitsPerNode;
         this.root = new Node<>(this.bitsPerNode);
-        this.root.partCopy(other.root, index);
+        this.root.partClone(other.root, index);
     }
 
     public int size() {

@@ -5,16 +5,14 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import pds.PersistentClasses.PList;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-class PListTest {
-    PList<Integer> lst;
+class TestPDoublyLinkedList {
+    PDoublyLinkedList<Integer> lst;
 
     @BeforeEach
-    void initPlist() {
-        lst = new PList<>(3, 1);
+    void initPDoublyLinkedList() {
+        lst = new PDoublyLinkedList<>(3, 1);
     }
 
     @Test
@@ -159,10 +157,10 @@ class PListTest {
 
     @Test
     void testNestedUndoRedo() {
-        PList<PList<Integer>> parent = new PList<>();
-        PList<Integer> lst1 = new PList<>();
-        PList<Integer> lst2 = new PList<>();
-        PList<Integer> lst3 = new PList<>();
+        PDoublyLinkedList<PDoublyLinkedList<Integer>> parent = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> lst1 = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> lst2 = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> lst3 = new PDoublyLinkedList<>();
 
         parent.addAll(Arrays.asList(lst1, lst2));
         assertEquals("[[], []]", parent.toString());
@@ -205,7 +203,7 @@ class PListTest {
     void testPairs() {
         lst.addAll(Arrays.asList(1, 2, 3, 4));
         
-        PList<Integer> lstCopy = new PList<>(lst);
+        PDoublyLinkedList<Integer> lstCopy = new PDoublyLinkedList<>(lst);
         assertEquals("[1, 2, 3, 4]", lstCopy.toString());
 
         lstCopy.add(5);

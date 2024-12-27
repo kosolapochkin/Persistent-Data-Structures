@@ -1,104 +1,92 @@
-package pds.PersistentClasses;
+package pds;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import pds.UtilClasses.VersionStack;
-import pds.UtilClasses.PListUtilClasses.HeadList;
-import pds.UtilClasses.PListUtilClasses.ListNode;
-import pds.UtilClasses.Node;
-import pds.UtilClasses.UndoRedoDataStructure;
+import pds.SubClasses.HeadList;
+import pds.SubClasses.ListNode;
+import pds.SubClasses.Node;
+import pds.SubClasses.UndoRedoDataStructure;
+import pds.SubClasses.UndoRedoStack;
 
 /**
  * Персистентный двусвязный список
+ * @value depth - глубина дерева
+ * @value bitsPerNode - число бит на каждую ноду дерева
  */
 @SuppressWarnings("unchecked")
-public class PList<E> implements UndoRedoDataStructure {
+public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
 
     private int depth;
     private int bitsPerNode;
     private int mask;
     private int maxSize;
     private int nodeSize;
-    private VersionStack<E> thisVersionStack;
-    private VersionStack<E> nestedVersionStack;
+    private UndoRedoStack<E> versions;
+    private UndoRedoStack<E> changes;
+    private PDoublyLinkedList<E> parent;
 
-    private PList<E> parent;
-
-    public PList() {
+    public PDoublyLinkedList() {
         this(3, 2);
     }
 
-    public PList(int depth, int bitsPerNode) {
+    public PDoublyLinkedList(int depth, int bitsPerNode) {
         this.depth = depth;
         this.bitsPerNode = bitsPerNode;
         this.maxSize = (int) Math.pow(2, bitsPerNode * depth);
         this.nodeSize = (int) Math.pow(2, bitsPerNode);
         this.mask = this.nodeSize - 1;
         HeadList<E> HeadList = new HeadList<>(this.bitsPerNode);
-        this.thisVersionStack = new VersionStack<>(HeadList);
-        this.nestedVersionStack = new VersionStack<>();
+        this.versions = new UndoRedoStack<>(HeadList);
+        this.changes = new UndoRedoStack<>();
     }
 
-    public PList(PList<E> other) {
+    public PDoublyLinkedList(PDoublyLinkedList<E> other) {
         this(other.depth, other.bitsPerNode);
-        this.thisVersionStack.copy(other.thisVersionStack);
-        this.nestedVersionStack.copy(other.nestedVersionStack);
-    }
-
-    public void newVersion(Object newHead) {
-        if (this.parent != null) {
-            parent.nestedVersionStack.getUndo().push(this);
-        }
-        this.nestedVersionStack.getUndo().push(null);
-        this.nestedVersionStack.getRedo().clear();
-        this.thisVersionStack.newVersion(newHead);
-    }
-
-    public int getCurrentVersion() {
-        return this.thisVersionStack.getCurrentVersion();
-    }
-
-    public int getVersionCount() {
-        return this.thisVersionStack.getVersionCount();
+        this.versions.clone(other.versions);
+        this.changes.clone(other.changes);
     }
 
     public void undo() {
-        if (!this.nestedVersionStack.getUndo().isEmpty()) {
-            Object peek = this.nestedVersionStack.getUndo().peek();
+        if (!this.changes.getUndo().isEmpty()) {
+            Object peek = this.changes.getUndo().peek();
             if (peek == null) {
-                this.thisVersionStack.undo();
+                this.versions.undo();
             } else {
-                ((PList<E>) peek).undo();
+                ((PDoublyLinkedList<E>) peek).undo();
             }
-            this.nestedVersionStack.getRedo().push(this.nestedVersionStack.getUndo().pop());
+            this.changes.getRedo().push(this.changes.getUndo().pop());
         }
     }
 
     public void redo() {
-        if (!this.nestedVersionStack.getRedo().isEmpty()) {
-            Object peek = this.nestedVersionStack.getRedo().peek();
+        if (!this.changes.getRedo().isEmpty()) {
+            Object peek = this.changes.getRedo().peek();
             if (peek == null) {
-                this.thisVersionStack.redo();
+                this.versions.redo();
             } else {
-                ((PList<E>) peek).redo();
+                ((PDoublyLinkedList<E>) peek).redo();
             }
-            this.nestedVersionStack.getUndo().push(this.nestedVersionStack.getRedo().pop());
+            this.changes.getUndo().push(this.changes.getRedo().pop());
         }
     }
 
-    public E get(int index) {
-        index = getwidthIndex(index);
-        return getListNode(index).getValue();
+    public int getCurrentVersion() {
+        return this.versions.getCurrentVersion();
     }
 
-    public void add(E value) {
+    public int getVersionCount() {
+        return this.versions.getVersionCount();
+    }
+
+    public boolean add(E value) {
         setParent(value);
         HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
-        head.copy(getHead());
+        head.clone(getHead());
         checkIfFull(head, 1);
         newVersion(head);
         add(head, value);
+        return true;
     }
 
     public void add(int index, E value) {
@@ -113,20 +101,18 @@ public class PList<E> implements UndoRedoDataStructure {
         } else {
             Integer befIndex = null;
             Integer aftIndex = null;
-            ListNode<E> befValue;
-            ListNode<E> aftValue;
             Integer freeIndex = oldHead.pollEmptyIndex();
             newHead = new HeadList<>(this.bitsPerNode);
-            newHead.copy(oldHead);
+            newHead.clone(oldHead);
             if (index != 0) {
-                befIndex = getwidthIndex(newHead, index - 1);
+                befIndex = getWidthIndex(newHead, index - 1);
             }
             if (index != newHead.getSize()) {
-                aftIndex = getwidthIndex(newHead, index);
+                aftIndex = getWidthIndex(newHead, index);
             }
             if (befIndex != null) {
                 node = copyPath(newHead, befIndex);
-                befValue = new ListNode<>();
+                ListNode<E> befValue = new ListNode<>();
                 befValue.copy((ListNode<E>) node.get()[befIndex & this.mask]);
                 befValue.setNext(freeIndex);
                 node.set(befIndex & this.mask, befValue);
@@ -136,9 +122,9 @@ public class PList<E> implements UndoRedoDataStructure {
             if (aftIndex != null) {
                 oldHead = newHead;
                 newHead = new HeadList<>(this.bitsPerNode);
-                newHead.copy(oldHead);
+                newHead.clone(oldHead);
                 node = copyPath(newHead, aftIndex);
-                aftValue = new ListNode<>();
+                ListNode<E> aftValue = new ListNode<>();
                 aftValue.copy((ListNode<E>) node.get()[aftIndex & this.mask]);
                 aftValue.setPrev(freeIndex);
                 node.set(aftIndex & this.mask, aftValue);
@@ -156,27 +142,35 @@ public class PList<E> implements UndoRedoDataStructure {
         }
     }
 
-    public void addAll(List<E> values) {
+    public boolean addAll(List<E> values) {
         HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
         checkIfFull(head, values.size());
-        head.copy(getHead());
+        head.clone(getHead());
         newVersion(head);
         for (int i = 0; i < values.size(); i++) {
             E value = values.get(i);
             setParent(value);
             add(head, value);
         }
+        return true;
     }
 
-    public void set(int index, E value) {
-        setParent(value);
-        HeadList<ListNode<E>> oldHead = getHead();
-        checkIfEmpty(oldHead);
-        checkWidthIndex(oldHead, index);
-        HeadList<ListNode<E>> newHead = new HeadList<>(this.bitsPerNode);
-        newHead.copy(oldHead);
-        newVersion(newHead);
-        set(newHead, index, value);
+    public void clear() {
+        HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
+        newVersion(head);
+    }
+
+    public E get(int index) {
+        index = getWidthIndex(index);
+        return getListNode(index).getValue();
+    }
+
+    public boolean isEmpty() {
+        return isEmpty(getHead());
+    }
+
+    private boolean isFull(HeadList<ListNode<E>> head, int extra) {
+        return head.getSize() + extra >= maxSize;
     }
 
     public E remove(int index) {
@@ -193,13 +187,13 @@ public class PList<E> implements UndoRedoDataStructure {
             ListNode<E> befValue;
             ListNode<E> aftValue;
             newHead = new HeadList<>(this.bitsPerNode);
-            newHead.copy(oldHead);
-            Integer widthIndex = getwidthIndex(newHead, index);
+            newHead.clone(oldHead);
+            Integer widthIndex = getWidthIndex(newHead, index);
             if (index != 0) {
-                befIndex = getwidthIndex(newHead, index - 1);
+                befIndex = getWidthIndex(newHead, index - 1);
             }
             if (index != newHead.getSize() - 1) {
-                aftIndex = getwidthIndex(newHead, index + 1);
+                aftIndex = getWidthIndex(newHead, index + 1);
             }
             if (befIndex != null) {
                 node = copyPath(newHead, befIndex);
@@ -213,7 +207,7 @@ public class PList<E> implements UndoRedoDataStructure {
             if (aftIndex != null) {
                 oldHead = newHead;
                 newHead = new HeadList<>(this.bitsPerNode);
-                newHead.copy(oldHead);
+                newHead.clone(oldHead);
                 node = copyPath(newHead, aftIndex);
                 aftValue = new ListNode<>();
                 aftValue.copy((ListNode<E>) node.get()[aftIndex & this.mask]);
@@ -222,7 +216,6 @@ public class PList<E> implements UndoRedoDataStructure {
             } else {
                 newHead.setLast(befIndex);
             }
-            
             node = copyPath(newHead, widthIndex);
             node.set(widthIndex & this.mask, null);
             if (widthIndex != newHead.getWidth()) {
@@ -237,9 +230,149 @@ public class PList<E> implements UndoRedoDataStructure {
         return result;
     }
 
-    public void clear() {
-        HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
-        newVersion(head);
+    public E set(int index, E value) {
+        setParent(value);
+        HeadList<ListNode<E>> oldHead = getHead();
+        checkIfEmpty(oldHead);
+        checkWidthIndex(oldHead, index);
+        HeadList<ListNode<E>> newHead = new HeadList<>(this.bitsPerNode);
+        newHead.clone(oldHead);
+        newVersion(newHead);
+        E prevValue = get(index);
+        set(newHead, index, value);
+        return prevValue;
+    }
+
+    public int size() {
+        return getHead().getSize();
+    }
+    
+    public int maxSize() {
+        return this.maxSize;
+    }
+
+    public int getBitsPerNode() {
+        return this.bitsPerNode;
+    }
+
+    public int getDepth() {
+        return this.depth;
+    }
+
+    public int getNodeSize() {
+        return this.nodeSize;
+    }
+
+    public List<E> toList() {
+        List<E> values;
+        HeadList<ListNode<E>> head = getHead();
+        if (head != null) {
+            values = new ArrayList<>(head.getSize());
+            Integer index = head.getFirst();
+            for (int i = 0; i < head.getSize(); i++) {
+                ListNode<E> listElement = getListNode(index);
+                Object value = listElement.getValue();
+                if (value instanceof PDoublyLinkedList) {
+                    value = ((PDoublyLinkedList<E>) value).toList();
+                }
+                values.add((E) value);
+                index = listElement.getNext();
+            }
+        } else {
+            values = new ArrayList<>(0);
+        }
+        return values;  
+    }
+
+    public List<E> toArray() {
+        List<E> values;
+        HeadList<ListNode<E>> head = getHead();
+        if (head != null) {
+            Object[] leafNodeValues;
+            values = new ArrayList<>(head.getWidth());
+            for (int i = 0; i < head.getWidth(); i = i + this.nodeSize) {
+                leafNodeValues = getLeafNodeValues(head, i);
+                for (int j = 0; j < this.nodeSize; j++) {
+                    if (leafNodeValues[j] == null) {
+                        values.add(null);
+                    } else {
+                        Object value = ((ListNode<E>) leafNodeValues[j]).getValue();
+                        if (value instanceof PDoublyLinkedList) {
+                            value = ((PDoublyLinkedList<E>) value).toList();
+                        }
+                        values.add((E) value);
+                    }
+                }
+            }
+        } else {
+            values = new ArrayList<>(0);
+        }
+        return values;  
+    }
+
+    public String toString() {
+        return this.toList().toString();
+    }
+
+    private void newVersion(Object newHead) {
+        if (this.parent != null) {
+            parent.changes.getUndo().push(this);
+        }
+        this.changes.getUndo().push(null);
+        this.changes.getRedo().clear();
+        this.versions.newVersion(newHead);
+    }
+
+    private void setParent(Object object) {
+        if (isPersistent(object)) {
+            ((PDoublyLinkedList<E>) object).parent = this;
+        }
+    }
+
+    private boolean isPersistent(Object object) {
+        if (object instanceof PDoublyLinkedList) {
+            return true;
+        }
+        return false;
+    }
+
+    private Node<ListNode<E>> copyPath(HeadList<ListNode<E>> head, int index) {
+        Node<E> newNode;
+        Node<ListNode<E>> currentNode = head.getRoot();
+        for (int level = (this.depth - 1) * this.bitsPerNode; level > 0; level -= this.bitsPerNode) {
+            int id = (index >> level) & this.mask;
+            if (currentNode.isEmpty()) {
+                newNode = new Node<>(this.bitsPerNode);
+                currentNode.add(newNode);
+            } else {
+                if (id == currentNode.getCount()) {
+                    newNode = new Node<>(this.bitsPerNode);
+                    currentNode.add(newNode);
+                } else {
+                    newNode = new Node<>(this.bitsPerNode);
+
+                    newNode.clone((Node<E>) currentNode.get(id));
+                    currentNode.set(id, newNode);
+                }
+            }
+            currentNode = (Node<ListNode<E>>) newNode;
+        }
+        return currentNode;
+    }
+
+    private Integer getWidthIndex(int index) {
+        return getWidthIndex(getHead(), index);
+    }
+
+    private Integer getWidthIndex(HeadList<ListNode<E>> head, int index) {
+        if (head.getSize() == 0) {
+            return null;
+        }
+        Integer currentIndex = head.getFirst();
+        for (int i = 0; i < index; i++) {
+            currentIndex = getListNode(currentIndex).getNext();
+        }
+        return currentIndex;
     }
 
     private void add(HeadList<ListNode<E>> head, E value) {
@@ -275,7 +408,7 @@ public class PList<E> implements UndoRedoDataStructure {
     }
 
     private void set(HeadList<ListNode<E>> head, int index, E value) {
-        Node<ListNode<E>> leafNode = copyPath(head, getwidthIndex(head, index));
+        Node<ListNode<E>> leafNode = copyPath(head, getWidthIndex(head, index));
         ListNode<E> newNode = new ListNode<>();
         newNode.copy((ListNode<E>) leafNode.get()[index & this.mask]);
         newNode.setValue(value);
@@ -305,77 +438,12 @@ public class PList<E> implements UndoRedoDataStructure {
         return node;
     }
 
-    private Node<ListNode<E>> copyPath(HeadList<ListNode<E>> head, int index) {
-        Node<E> newNode;
-        Node<ListNode<E>> currentNode = head.getRoot();
-        for (int level = (this.depth - 1) * this.bitsPerNode; level > 0; level -= this.bitsPerNode) {
-            int id = (index >> level) & this.mask;
-            if (currentNode.isEmpty()) {
-                newNode = new Node<>(this.bitsPerNode);
-                currentNode.add(newNode);
-            } else {
-                if (id == currentNode.getCount()) {
-                    newNode = new Node<>(this.bitsPerNode);
-                    currentNode.add(newNode);
-                } else {
-                    newNode = new Node<>(this.bitsPerNode);
-
-                    newNode.copy((Node<E>) currentNode.get(id));
-                    currentNode.set(id, newNode);
-                }
-            }
-            currentNode = (Node<ListNode<E>>) newNode;
-        }
-        return currentNode;
-    }
-
-    public int size() {
-        return getHead().getSize();
-    }
-    
-    public int maxSize() {
-        return this.maxSize;
-    }
-
-    public int getBitsPerNode() {
-        return this.bitsPerNode;
-    }
-
-    public int getDepth() {
-        return this.depth;
-    }
-
-    public int getNodeSize() {
-        return this.nodeSize;
-    }
-
-    public HeadList<ListNode<E>> getHead() {
-        return (HeadList<ListNode<E>>) this.thisVersionStack.getCurrent();
-    }
-
-    public void setParent(Object object) {
-        if (isPersistent(object)) {
-            ((PList<E>) object).parent = this;
-        }
-    }
-
-    private boolean isPersistent(Object object) {
-        if (object instanceof PList) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isEmpty() {
-        return isEmpty(getHead());
+    private HeadList<ListNode<E>> getHead() {
+        return (HeadList<ListNode<E>>) this.versions.getCurrent();
     }
 
     private boolean isEmpty(HeadList<ListNode<E>> head) {
         return head.getSize() == 0;
-    }
-
-    private boolean isFull(HeadList<ListNode<E>> head, int extra) {
-        return head.getSize() + extra >= maxSize;
     }
 
     private void checkIfFull() {
@@ -386,7 +454,7 @@ public class PList<E> implements UndoRedoDataStructure {
 
     private void checkIfFull(HeadList<ListNode<E>> HeadArray, int delta) {
         if (HeadArray.getSize() + delta > this.maxSize) {
-            throw new IllegalStateException("Array is full");
+            throw new IllegalStateException("List is full");
         }
     }
 
@@ -412,70 +480,4 @@ public class PList<E> implements UndoRedoDataStructure {
         }
     }
 
-    private Integer getwidthIndex(int index) {
-        return getwidthIndex(getHead(), index);
-    }
-
-    private Integer getwidthIndex(HeadList<ListNode<E>> head, int index) {
-        if (head.getSize() == 0) {
-            return null;
-        }
-        Integer currentIndex = head.getFirst();
-
-        for (int i = 0; i < index; i++) {
-            currentIndex = getListNode(currentIndex).getNext();
-        }
-        return currentIndex;
-    }
-
-    public List<E> toList() {
-        List<E> values;
-        HeadList<ListNode<E>> head = getHead();
-        if (head != null) {
-            values = new ArrayList<>(head.getSize());
-            Integer index = head.getFirst();
-            for (int i = 0; i < head.getSize(); i++) {
-                ListNode<E> listElement = getListNode(index);
-                Object value = listElement.getValue();
-                if (value instanceof PList) {
-                    value = ((PList<E>) value).toList();
-                }
-                values.add((E) value);
-                index = listElement.getNext();
-            }
-        } else {
-            values = new ArrayList<>(0);
-        }
-        return values;  
-    }
-
-    public List<E> toArray() {
-        List<E> values;
-        HeadList<ListNode<E>> head = getHead();
-        if (head != null) {
-            Object[] leafNodeValues;
-            values = new ArrayList<>(head.getWidth());
-            for (int i = 0; i < head.getWidth(); i = i + this.nodeSize) {
-                leafNodeValues = getLeafNodeValues(head, i);
-                for (int j = 0; j < this.nodeSize; j++) {
-                    if (leafNodeValues[j] == null) {
-                        values.add(null);
-                    } else {
-                        Object value = ((ListNode<E>) leafNodeValues[j]).getValue();
-                        if (value instanceof PList) {
-                            value = ((PList<E>) value).toList();
-                        }
-                        values.add((E) value);
-                    }
-                }
-            }
-        } else {
-            values = new ArrayList<>(0);
-        }
-        return values;  
-    }
-
-    public String toString() {
-        return this.toList().toString();
-    }
 }

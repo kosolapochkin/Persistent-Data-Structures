@@ -1,23 +1,23 @@
-package pds.UtilClasses;
+package pds.SubClasses;
 
 import java.util.Stack;
 
-public class VersionStack<E> {
+public class UndoRedoStack<E> {
 
     private Stack<Object> undo;
     private Stack<Object> redo;
 
-    public VersionStack() {
+    public UndoRedoStack() {
         this.undo = new Stack<>();
         this.redo = new Stack<>();
     }
     
-    public VersionStack(Object head) {
+    public UndoRedoStack(Object head) {
         this();
         this.undo.push(head);
     }
 
-    public void copy(VersionStack<E> other) {
+    public void clone(UndoRedoStack<E> other) {
         this.undo.addAll(other.getUndo());
         this.redo.addAll(other.getRedo());
     }

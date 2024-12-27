@@ -5,11 +5,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import pds.PersistentClasses.PArray;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-class PArrayTest {
+class TestPArray {
     PArray<Integer> arr;
 
     @BeforeEach
@@ -88,17 +86,6 @@ class PArrayTest {
         arr.redo();
         assertEquals(3, arr.getVersionCount());
         assertEquals("[1, 2, 3, 4, 1]", arr.toString());
-    }
-
-   
-    @Test
-    void testPop() {
-        arr.addAll(Arrays.asList(1, 2, 3, 4));
-        assertEquals(4, arr.pop());
-        assertEquals(3, arr.pop());
-
-        arr.undo();
-        assertEquals("[1, 2, 3]", arr.toString());
     }
 
     @Test

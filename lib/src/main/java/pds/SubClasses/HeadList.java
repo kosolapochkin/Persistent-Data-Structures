@@ -1,9 +1,6 @@
-package pds.UtilClasses.PListUtilClasses;
+package pds.SubClasses;
 
 import java.util.LinkedList;
-
-import pds.UtilClasses.Head;
-import pds.UtilClasses.Node;
 
 public class HeadList<E> extends Head<E> {
 
@@ -20,12 +17,12 @@ public class HeadList<E> extends Head<E> {
         this.emptyIndexes = new LinkedList<>();
     }
 
-    public void copy(HeadList<E> other) {
+    public void clone(HeadList<E> other) {
         this.size = other.getSize();
         this.width = other.getWidth();
         this.bitsPerNode = other.bitsPerNode;
         this.root = new Node<>(this.bitsPerNode);
-        this.root.copy(other.root);      
+        this.root.clone(other.root);      
         this.first = other.first;
         this.last = other.last;
         this.emptyIndexes = other.emptyIndexes;

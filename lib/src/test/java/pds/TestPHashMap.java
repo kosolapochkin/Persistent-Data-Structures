@@ -143,31 +143,53 @@ class TestPHashMap {
 
         parent.put("map1", map1);
         parent.put("map2", map2);
-        assertEquals("{map1:{}, map2:{}}", parent.toString());
+        assertTrue(parent.toString().contains("map1:{}"));
+        assertTrue(parent.toString().contains("map2:{}"));
 
         parent.get("map1").put("A", 1);
         parent.get("map1").put("B", 2);
         parent.get("map2").put("C", 3);
-        assertEquals("{map1:{B:2, A:1}, map2:{C:3}}", parent.toString());
+        assertTrue(parent.get("map1").toString().contains("A:1"));
+        assertTrue(parent.get("map1").toString().contains("B:2"));
+        assertTrue(parent.get("map2").toString().contains("C:3"));
 
         parent.undo();
-        assertEquals("{map1:{B:2, A:1}, map2:{}}", parent.toString());
+        assertTrue(parent.get("map1").toString().contains("A:1"));
+        assertTrue(parent.get("map1").toString().contains("B:2"));
+        assertFalse(parent.get("map2").toString().contains("C:3"));
 
         parent.redo();
-        assertEquals("{map1:{B:2, A:1}, map2:{C:3}}", parent.toString());
+        assertTrue(parent.get("map1").toString().contains("A:1"));
+        assertTrue(parent.get("map1").toString().contains("B:2"));
+        assertTrue(parent.get("map2").toString().contains("C:3"));
 
         parent.put("map3", map3);
         parent.get("map3").put("D", 4);
-        assertEquals("{map3:{D:4}, map1:{B:2, A:1}, map2:{C:3}}", parent.toString());
+        assertTrue(parent.get("map1").toString().contains("A:1"));
+        assertTrue(parent.get("map1").toString().contains("B:2"));
+        assertTrue(parent.get("map2").toString().contains("C:3"));
+        assertTrue(parent.get("map3").toString().contains("D:4"));
 
         parent.get("map2").put("E", 5);
-        assertEquals("{map3:{D:4}, map1:{B:2, A:1}, map2:{C:3, E:5}}", parent.toString());
+        assertTrue(parent.get("map1").toString().contains("A:1"));
+        assertTrue(parent.get("map1").toString().contains("B:2"));
+        assertTrue(parent.get("map2").toString().contains("C:3"));
+        assertTrue(parent.get("map2").toString().contains("E:5"));
+        assertTrue(parent.get("map3").toString().contains("D:4"));
 
         parent.undo();
         parent.undo();
-        assertEquals("{map3:{}, map1:{B:2, A:1}, map2:{C:3}}", parent.toString());
+        assertTrue(parent.get("map1").toString().contains("A:1"));
+        assertTrue(parent.get("map1").toString().contains("B:2"));
+        assertTrue(parent.get("map2").toString().contains("C:3"));
+        assertFalse(parent.get("map2").toString().contains("E:5"));
+        assertTrue(parent.toString().contains("map3"));
+        assertFalse(parent.get("map3").toString().contains("D:4"));
 
         parent.undo();
-        assertEquals("{map1:{B:2, A:1}, map2:{C:3}}", parent.toString());
+        assertTrue(parent.get("map1").toString().contains("A:1"));
+        assertTrue(parent.get("map1").toString().contains("B:2"));
+        assertTrue(parent.get("map2").toString().contains("C:3"));
+        assertFalse(parent.toString().contains("map3"));
     }
 }

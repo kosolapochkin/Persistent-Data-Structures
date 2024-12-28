@@ -3,21 +3,21 @@ package pds;
 import java.util.ArrayList;
 import java.util.List;
 
-import pds.SubClasses.HeadList;
-import pds.SubClasses.ListNode;
-import pds.SubClasses.Node;
-import pds.SubClasses.UndoRedoDataStructure;
-import pds.SubClasses.UndoRedoStack;
+import pds.SubClasses.PDoublyLinkedListClasses.ListNode;
+import pds.SubClasses.TrieClasses.HeadList;
+import pds.SubClasses.TrieClasses.Node;
+import pds.SubClasses.UndoRedoClasses.UndoRedoDataStructure;
+import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
 
 /**
  * Персистентный двусвязный список
- * @value depth - глубина дерева
+ * @value height - высота дерева
  * @value bitsPerNode - число бит на каждую ноду дерева
  */
 @SuppressWarnings("unchecked")
 public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
 
-    private int depth;
+    private int height;
     private int bitsPerNode;
     private int mask;
     private int maxSize;
@@ -30,10 +30,10 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
         this(3, 2);
     }
 
-    public PDoublyLinkedList(int depth, int bitsPerNode) {
-        this.depth = depth;
+    public PDoublyLinkedList(int height, int bitsPerNode) {
+        this.height = height;
         this.bitsPerNode = bitsPerNode;
-        this.maxSize = (int) Math.pow(2, bitsPerNode * depth);
+        this.maxSize = (int) Math.pow(2, bitsPerNode * height);
         this.nodeSize = (int) Math.pow(2, bitsPerNode);
         this.mask = this.nodeSize - 1;
         HeadList<E> HeadList = new HeadList<>(this.bitsPerNode);
@@ -42,7 +42,7 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
     }
 
     public PDoublyLinkedList(PDoublyLinkedList<E> other) {
-        this(other.depth, other.bitsPerNode);
+        this(other.height, other.bitsPerNode);
         this.versions.clone(other.versions);
         this.changes.clone(other.changes);
     }
@@ -255,8 +255,8 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
         return this.bitsPerNode;
     }
 
-    public int getDepth() {
-        return this.depth;
+    public int getheight() {
+        return this.height;
     }
 
     public int getNodeSize() {
@@ -339,7 +339,7 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
     private Node<ListNode<E>> copyPath(HeadList<ListNode<E>> head, int index) {
         Node<E> newNode;
         Node<ListNode<E>> currentNode = head.getRoot();
-        for (int level = (this.depth - 1) * this.bitsPerNode; level > 0; level -= this.bitsPerNode) {
+        for (int level = (this.height - 1) * this.bitsPerNode; level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
             if (currentNode.isEmpty()) {
                 newNode = new Node<>(this.bitsPerNode);
@@ -431,7 +431,7 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
     private Node<ListNode<E>> getLeafNode(HeadList<ListNode<E>> head, int index) {
             checkWidthIndex(head, index);
             Node<ListNode<E>> node = head.getRoot();
-        for (int level = this.bitsPerNode * (this.depth - 1); level > 0; level -= this.bitsPerNode) {
+        for (int level = this.bitsPerNode * (this.height - 1); level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
             node = (Node<ListNode<E>>) node.get(id);
         }

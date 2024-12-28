@@ -1,5 +1,6 @@
-package pds.SubClasses;
+package pds.SubClasses.UndoRedoClasses;
 
+@SuppressWarnings("unused")
 public interface UndoRedoDataStructure {
 
     private void newVersion(Object object) {};

@@ -1,4 +1,4 @@
-package pds.SubClasses;
+package pds.SubClasses.TrieClasses;
 
 public class Head<E> {
     

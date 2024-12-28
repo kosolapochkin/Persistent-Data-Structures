@@ -6,9 +6,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import pds.SubClasses.MapNode;
-import pds.SubClasses.UndoRedoDataStructure;
-import pds.SubClasses.UndoRedoStack;
+import pds.SubClasses.PHashMapClasses.MapNode;
+import pds.SubClasses.UndoRedoClasses.UndoRedoDataStructure;
+import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
 
 /**
  * Персистентный ассоциативный массив

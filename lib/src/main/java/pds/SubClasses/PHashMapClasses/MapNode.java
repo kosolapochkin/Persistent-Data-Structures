@@ -1,4 +1,4 @@
-package pds.SubClasses;
+package pds.SubClasses.PHashMapClasses;
 
 public class MapNode<K, V> {
 

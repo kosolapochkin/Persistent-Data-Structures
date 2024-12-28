@@ -3,20 +3,20 @@ package pds;
 import java.util.ArrayList;
 import java.util.List;
 
-import pds.SubClasses.Head;
-import pds.SubClasses.Node;
-import pds.SubClasses.UndoRedoDataStructure;
-import pds.SubClasses.UndoRedoStack;
+import pds.SubClasses.TrieClasses.Head;
+import pds.SubClasses.TrieClasses.Node;
+import pds.SubClasses.UndoRedoClasses.UndoRedoDataStructure;
+import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
 
 /**
  * Персистентный массив
- * @value depth - глубина дерева
+ * @value height - высота дерева
  * @value bitsPerNode - число бит на каждую ноду дерева
  */
 @SuppressWarnings("unchecked")
 public class PArray<E> implements UndoRedoDataStructure {
 
-    private int depth;
+    private int height;
     private int bitsPerNode;
     private int mask;
     private int maxSize;
@@ -29,10 +29,10 @@ public class PArray<E> implements UndoRedoDataStructure {
         this(3, 2);
     }
 
-    public PArray(int depth, int bitsPerNode) {
-        this.depth = depth;
+    public PArray(int height, int bitsPerNode) {
+        this.height = height;
         this.bitsPerNode = bitsPerNode;
-        this.maxSize = (int) Math.pow(2, bitsPerNode * depth);
+        this.maxSize = (int) Math.pow(2, bitsPerNode * height);
         this.nodeSize = (int) Math.pow(2, bitsPerNode);
         this.mask = this.nodeSize - 1;
         Head<E> head = new Head<>(this.bitsPerNode);
@@ -41,7 +41,7 @@ public class PArray<E> implements UndoRedoDataStructure {
     }
 
     public PArray(PArray<E> other) {
-        this(other.depth, other.bitsPerNode);
+        this(other.height, other.bitsPerNode);
         this.versions.clone(other.versions);
         this.changes.clone(other.changes);
     }
@@ -93,7 +93,7 @@ public class PArray<E> implements UndoRedoDataStructure {
         Head<E> oldHead = getHead();
         checkIfFull(oldHead);
         checkIndex(oldHead, index);
-        Node<E> node = copyPathForAdding(oldHead, index);
+        Node<E> node = partCopyPath(oldHead, index);
         node.set(index & this.mask, value);
         Head<E> newHead = getHead();
         for (int i = index; i < oldHead.size(); i++) {
@@ -136,7 +136,7 @@ public class PArray<E> implements UndoRedoDataStructure {
         Head<E> oldHead = getHead();
         checkIndex(oldHead, index);
         checkIfEmpty(oldHead);
-        Node<E> node = copyPathForAdding(oldHead, index);
+        Node<E> node = partCopyPath(oldHead, index);
         E value = (E) node.pop();
         Head<E>newHead = getHead();
         newHead.setSize(newHead.size() - 1);
@@ -171,8 +171,8 @@ public class PArray<E> implements UndoRedoDataStructure {
         return this.bitsPerNode;
     }
 
-    public int getDepth() {
-        return this.depth;
+    public int getheight() {
+        return this.height;
     }
 
     public int getNodeSize() {
@@ -233,7 +233,7 @@ public class PArray<E> implements UndoRedoDataStructure {
         Node<E> currentNode;
         Node<E> newNode;
         currentNode = Head.getRoot();
-        for (int level = (this.depth - 1) * this.bitsPerNode; level > 0; level -= this.bitsPerNode) {
+        for (int level = (this.height - 1) * this.bitsPerNode; level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
             if (currentNode.isEmpty()) {
                 newNode = new Node<>(this.bitsPerNode);
@@ -253,13 +253,13 @@ public class PArray<E> implements UndoRedoDataStructure {
         return currentNode;
     }
 
-    private Node<E> copyPathForAdding(Head<E> Head, int index) {
+    private Node<E> partCopyPath(Head<E> Head, int index) {
         Head<E> newHead = new Head<>(this.bitsPerNode);
-        newHead.partClone(Head, (index >> (this.bitsPerNode * (depth - 1))) & this.mask);
+        newHead.partClone(Head, (index >> (this.bitsPerNode * (height - 1))) & this.mask);
         newHead.setSize(index + 1);
         newVersion(newHead);
         Node<E> currentNode = newHead.getRoot();
-        for (int level = this.bitsPerNode * (depth - 1); level > 0; level -= this.bitsPerNode) {
+        for (int level = this.bitsPerNode * (height - 1); level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
             int idNext = (index >> (level - this.bitsPerNode)) & this.mask;
             Node<E> newNode = new Node<>(this.bitsPerNode);
@@ -293,7 +293,7 @@ public class PArray<E> implements UndoRedoDataStructure {
         Node<E> node;
         checkIndex(head, index);
         node = head.getRoot();
-        for (int level = this.bitsPerNode * (this.depth - 1); level > 0; level -= this.bitsPerNode) {
+        for (int level = this.bitsPerNode * (this.height - 1); level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
             node = (Node<E>) node.get(id);
         }

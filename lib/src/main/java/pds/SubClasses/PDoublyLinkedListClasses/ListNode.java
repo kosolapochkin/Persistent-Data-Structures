@@ -1,4 +1,4 @@
-package pds.SubClasses;
+package pds.SubClasses.PDoublyLinkedListClasses;
 
 public class ListNode<E> {
     private Integer next;

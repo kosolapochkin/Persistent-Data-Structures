@@ -14,27 +14,23 @@ import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
  * @value bitsPerNode - число бит на каждую ноду дерева
  */
 @SuppressWarnings("unchecked")
-public class PArray<E> implements UndoRedoDataStructure {
+public class PArray<E> extends UndoRedoDataStructure {
 
     private int height;
     private int bitsPerNode;
     private int mask;
     private int maxSize;
-    private int nodeSize;
-    private UndoRedoStack<E> versions;
-    private UndoRedoStack<E> changes;
-    private PArray<E> parent;
 
     public PArray() {
         this(3, 2);
     }
 
     public PArray(int height, int bitsPerNode) {
+        super();
         this.height = height;
         this.bitsPerNode = bitsPerNode;
         this.maxSize = (int) Math.pow(2, bitsPerNode * height);
-        this.nodeSize = (int) Math.pow(2, bitsPerNode);
-        this.mask = this.nodeSize - 1;
+        this.mask = (int) Math.pow(2, bitsPerNode) - 1;
         Head<E> head = new Head<>(this.bitsPerNode);
         this.versions = new UndoRedoStack<>(head);
         this.changes = new UndoRedoStack<>();
@@ -44,38 +40,6 @@ public class PArray<E> implements UndoRedoDataStructure {
         this(other.height, other.bitsPerNode);
         this.versions.clone(other.versions);
         this.changes.clone(other.changes);
-    }
-
-    public void undo() {
-        if (!this.changes.getUndo().isEmpty()) {
-            Object peek = this.changes.getUndo().peek();
-            if (peek == null) {
-                this.versions.undo();
-            } else {
-                ((PArray<E>) peek).undo();
-            }
-            this.changes.getRedo().push(this.changes.getUndo().pop());
-        }
-    }
-    
-    public void redo() {
-        if (!this.changes.getRedo().isEmpty()) {
-            Object peek = this.changes.getRedo().peek();
-            if (peek == null) {
-                this.versions.redo();
-            } else {
-                ((PArray<E>) peek).redo();
-            }
-            this.changes.getUndo().push(this.changes.getRedo().pop());
-        }
-    }
-
-    public int getCurrentVersion() {
-        return this.versions.getCurrentVersion();
-    }
-
-    public int getVersionCount() {
-        return this.versions.getVersionCount();
     }
 
     public boolean add(E value) {
@@ -175,23 +139,19 @@ public class PArray<E> implements UndoRedoDataStructure {
         return this.height;
     }
 
-    public int getNodeSize() {
-        return this.nodeSize;
-    }
-
-    public List<E> toList() {
-        List<E> values;
+    public List<Object> toList() {
+        List<Object> values;
         Head<E> Head = getHead();
         if (Head != null) {
             Object[] leafNodeValues;
             values = new ArrayList<>(Head.size());
-            for (int i = 0; i < Head.size(); i = i + this.nodeSize) {
+            for (int i = 0; i < Head.size(); i = i + this.mask + 1) {
                 leafNodeValues = getLeafNodeValues(Head, i);
-                for (int j = 0; j < this.nodeSize; j++) {
+                for (int j = 0; j < this.mask + 1; j++) {
                     if (leafNodeValues[j] != null) {
                         Object value = leafNodeValues[j];
-                        if (value instanceof PArray) {
-                            value = ((PArray<E>) value).toList();
+                        if (value instanceof UndoRedoDataStructure) {
+                            value = ((UndoRedoDataStructure) value).toList();
                         }
                         values.add((E) value);
                     }
@@ -205,28 +165,6 @@ public class PArray<E> implements UndoRedoDataStructure {
 
     public String toString() {
         return this.toList().toString();
-    }
-
-    private void newVersion(Object head) {
-        if (this.parent != null) {
-            parent.changes.getUndo().push(this);
-        }
-        this.changes.getUndo().push(null);
-        this.changes.getRedo().clear();
-        this.versions.newVersion(head);
-    }
-
-    private void setParent(Object object) {
-        if (isPersistent(object)) {
-            ((PArray<E>) object).parent = this;
-        }
-    }
-
-    private boolean isPersistent(Object object) {
-        if (object instanceof PArray) {
-            return true;
-        }
-        return false;
     }
 
     private Node<E> copyPath(Head<E> Head, int index) {

@@ -124,7 +124,7 @@ class TestPHashMap {
         assertTrue(map.toString().contains("E:6"));
 
         map.clear();
-        assertEquals("{}", map.toString());
+        assertEquals("[]", map.toString());
 
         map.undo();
         assertTrue(map.toString().contains("A:4"));
@@ -135,7 +135,7 @@ class TestPHashMap {
     }
 
     @Test
-    void testNestedUndoRedo() {
+    void testNestedUndoRedoPHashMap() {
         PHashMap<String, PHashMap<String, Integer>> parent = new PHashMap<>();
         PHashMap<String, Integer> map1 = new PHashMap<>();
         PHashMap<String, Integer> map2 = new PHashMap<>();
@@ -143,8 +143,8 @@ class TestPHashMap {
 
         parent.put("map1", map1);
         parent.put("map2", map2);
-        assertTrue(parent.toString().contains("map1:{}"));
-        assertTrue(parent.toString().contains("map2:{}"));
+        assertTrue(parent.toString().contains("map1:[]"));
+        assertTrue(parent.toString().contains("map2:[]"));
 
         parent.get("map1").put("A", 1);
         parent.get("map1").put("B", 2);
@@ -191,5 +191,125 @@ class TestPHashMap {
         assertTrue(parent.get("map1").toString().contains("B:2"));
         assertTrue(parent.get("map2").toString().contains("C:3"));
         assertFalse(parent.toString().contains("map3"));
+    }
+
+    @Test
+    void testNestedUndoRedoPArray() {
+        PHashMap<String, PArray<Integer>> parent = new PHashMap<>();
+        PArray<Integer> arr1 = new PArray<>();
+        PArray<Integer> arr2 = new PArray<>();
+        PArray<Integer> arr3 = new PArray<>();
+
+        parent.put("array1", arr1);
+        parent.put("array2", arr2);
+        assertTrue(parent.toString().contains("array1:[]"));
+        assertTrue(parent.toString().contains("array2:[]"));
+
+        parent.get("array1").add(1);
+        parent.get("array1").add(2);
+        parent.get("array2").add(3);
+        parent.get("array2").add(4);
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3, 4]"));
+
+        parent.undo();
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3]"));
+
+        parent.undo();
+        parent.undo();
+        assertTrue(parent.toString().contains("array1:[1]"));
+        assertTrue(parent.toString().contains("array2:[]"));
+
+        parent.redo();
+        parent.redo();
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3]"));
+
+        parent.put("array3", arr3);
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3]"));
+        assertTrue(parent.toString().contains("array3:[]"));
+
+        parent.get("array3").add(4);
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3]"));
+        assertTrue(parent.toString().contains("array3:[4]"));
+
+        parent.get("array2").add(5);
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3, 5]"));
+        assertTrue(parent.toString().contains("array3:[4]"));
+
+        parent.undo();
+        parent.undo();
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3]"));
+        assertTrue(parent.toString().contains("array3:[]"));
+
+        parent.undo();
+        assertTrue(parent.toString().contains("array1:[1, 2]"));
+        assertTrue(parent.toString().contains("array2:[3]"));
+        assertFalse(parent.toString().contains("array3:[]"));
+    }
+
+    @Test
+    void testNestedUndoRedoPDoublyLinkedList() {
+        PHashMap<String, PDoublyLinkedList<Integer>> parent = new PHashMap<>();
+        PDoublyLinkedList<Integer> list1 = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> list2 = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> list3 = new PDoublyLinkedList<>();
+
+        parent.put("list1", list1);
+        parent.put("list2", list2);
+        assertTrue(parent.toString().contains("list1:[]"));
+        assertTrue(parent.toString().contains("list2:[]"));
+
+        parent.get("list1").add(1);
+        parent.get("list1").add(2);
+        parent.get("list2").add(3);
+        parent.get("list2").add(4);
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3, 4]"));
+
+        parent.undo();
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3]"));
+
+        parent.undo();
+        parent.undo();
+        assertTrue(parent.toString().contains("list1:[1]"));
+        assertTrue(parent.toString().contains("list2:[]"));
+
+        parent.redo();
+        parent.redo();
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3]"));
+
+        parent.put("list3", list3);
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3]"));
+        assertTrue(parent.toString().contains("list3:[]"));
+
+        parent.get("list3").add(4);
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3]"));
+        assertTrue(parent.toString().contains("list3:[4]"));
+
+        parent.get("list2").add(5);
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3, 5]"));
+        assertTrue(parent.toString().contains("list3:[4]"));
+
+        parent.undo();
+        parent.undo();
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3]"));
+        assertTrue(parent.toString().contains("list3:[]"));
+
+        parent.undo();
+        assertTrue(parent.toString().contains("list1:[1, 2]"));
+        assertTrue(parent.toString().contains("list2:[3]"));
+        assertFalse(parent.toString().contains("list3:[]"));
     }
 }

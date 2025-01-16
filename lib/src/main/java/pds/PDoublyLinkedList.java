@@ -15,27 +15,23 @@ import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
  * @value bitsPerNode - число бит на каждую ноду дерева
  */
 @SuppressWarnings("unchecked")
-public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
+public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
 
     private int height;
     private int bitsPerNode;
     private int mask;
     private int maxSize;
-    private int nodeSize;
-    private UndoRedoStack<E> versions;
-    private UndoRedoStack<E> changes;
-    private PDoublyLinkedList<E> parent;
 
     public PDoublyLinkedList() {
         this(3, 2);
     }
 
     public PDoublyLinkedList(int height, int bitsPerNode) {
+        super();
         this.height = height;
         this.bitsPerNode = bitsPerNode;
         this.maxSize = (int) Math.pow(2, bitsPerNode * height);
-        this.nodeSize = (int) Math.pow(2, bitsPerNode);
-        this.mask = this.nodeSize - 1;
+        this.mask = (int) Math.pow(2, bitsPerNode) - 1;
         HeadList<E> HeadList = new HeadList<>(this.bitsPerNode);
         this.versions = new UndoRedoStack<>(HeadList);
         this.changes = new UndoRedoStack<>();
@@ -45,38 +41,6 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
         this(other.height, other.bitsPerNode);
         this.versions.clone(other.versions);
         this.changes.clone(other.changes);
-    }
-
-    public void undo() {
-        if (!this.changes.getUndo().isEmpty()) {
-            Object peek = this.changes.getUndo().peek();
-            if (peek == null) {
-                this.versions.undo();
-            } else {
-                ((PDoublyLinkedList<E>) peek).undo();
-            }
-            this.changes.getRedo().push(this.changes.getUndo().pop());
-        }
-    }
-
-    public void redo() {
-        if (!this.changes.getRedo().isEmpty()) {
-            Object peek = this.changes.getRedo().peek();
-            if (peek == null) {
-                this.versions.redo();
-            } else {
-                ((PDoublyLinkedList<E>) peek).redo();
-            }
-            this.changes.getUndo().push(this.changes.getRedo().pop());
-        }
-    }
-
-    public int getCurrentVersion() {
-        return this.versions.getCurrentVersion();
-    }
-
-    public int getVersionCount() {
-        return this.versions.getVersionCount();
     }
 
     public boolean add(E value) {
@@ -259,12 +223,8 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
         return this.height;
     }
 
-    public int getNodeSize() {
-        return this.nodeSize;
-    }
-
-    public List<E> toList() {
-        List<E> values;
+    public List<Object> toList() {
+        List<Object> values;
         HeadList<ListNode<E>> head = getHead();
         if (head != null) {
             values = new ArrayList<>(head.getSize());
@@ -272,8 +232,8 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
             for (int i = 0; i < head.getSize(); i++) {
                 ListNode<E> listElement = getListNode(index);
                 Object value = listElement.getValue();
-                if (value instanceof PDoublyLinkedList) {
-                    value = ((PDoublyLinkedList<E>) value).toList();
+                if (value instanceof UndoRedoDataStructure) {
+                    value = ((UndoRedoDataStructure) value).toList();
                 }
                 values.add((E) value);
                 index = listElement.getNext();
@@ -284,21 +244,21 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
         return values;  
     }
 
-    public List<E> toArray() {
-        List<E> values;
+    public List<Object> toArray() {
+        List<Object> values;
         HeadList<ListNode<E>> head = getHead();
         if (head != null) {
             Object[] leafNodeValues;
             values = new ArrayList<>(head.getWidth());
-            for (int i = 0; i < head.getWidth(); i = i + this.nodeSize) {
+            for (int i = 0; i < head.getWidth(); i = i + this.mask + 1) {
                 leafNodeValues = getLeafNodeValues(head, i);
-                for (int j = 0; j < this.nodeSize; j++) {
+                for (int j = 0; j < this.mask + 1; j++) {
                     if (leafNodeValues[j] == null) {
                         values.add(null);
                     } else {
                         Object value = ((ListNode<E>) leafNodeValues[j]).getValue();
-                        if (value instanceof PDoublyLinkedList) {
-                            value = ((PDoublyLinkedList<E>) value).toList();
+                        if (value instanceof UndoRedoDataStructure) {
+                            value = ((UndoRedoDataStructure) value).toList();
                         }
                         values.add((E) value);
                     }
@@ -312,28 +272,6 @@ public class PDoublyLinkedList<E> implements UndoRedoDataStructure {
 
     public String toString() {
         return this.toList().toString();
-    }
-
-    private void newVersion(Object newHead) {
-        if (this.parent != null) {
-            parent.changes.getUndo().push(this);
-        }
-        this.changes.getUndo().push(null);
-        this.changes.getRedo().clear();
-        this.versions.newVersion(newHead);
-    }
-
-    private void setParent(Object object) {
-        if (isPersistent(object)) {
-            ((PDoublyLinkedList<E>) object).parent = this;
-        }
-    }
-
-    private boolean isPersistent(Object object) {
-        if (object instanceof PDoublyLinkedList) {
-            return true;
-        }
-        return false;
     }
 
     private Node<ListNode<E>> copyPath(HeadList<ListNode<E>> head, int index) {

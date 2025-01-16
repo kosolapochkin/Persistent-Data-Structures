@@ -15,20 +15,18 @@ import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
  * @value width - размер хэш-таблицы
  */
 @SuppressWarnings("unchecked")
-public class PHashMap<K, V> implements UndoRedoDataStructure {
+public class PHashMap<K, V> extends UndoRedoDataStructure {
 
     private int width;
     private int mask;
     private Object[] hashTable; 
-    private UndoRedoStack<?> versions;
-    private UndoRedoStack<?> changes;
-    private PHashMap<K, V> parent;
 
     public PHashMap() {
         this(32);
     }
 
     public PHashMap(int width) {
+        super();
         this.width = width;
         this.mask = width - 1;
         this.hashTable = new Object[width];
@@ -39,6 +37,7 @@ public class PHashMap<K, V> implements UndoRedoDataStructure {
         this.changes = new UndoRedoStack<>();
     }
 
+    @Override
     public void undo() {
         if (!this.changes.getUndo().isEmpty()) {
             Object peek = this.changes.getUndo().peek();
@@ -53,12 +52,13 @@ public class PHashMap<K, V> implements UndoRedoDataStructure {
                 }
                 this.versions.undo();
             } else {
-                ((PHashMap<K, V>) peek).undo();
+                ((UndoRedoDataStructure) peek).undo();
             }
             this.changes.getRedo().push(this.changes.getUndo().pop());
         }
     }
 
+    @Override
     public void redo() {
         if (!this.changes.getRedo().isEmpty()) {
             Object peek = this.changes.getRedo().peek();
@@ -73,18 +73,10 @@ public class PHashMap<K, V> implements UndoRedoDataStructure {
                 }
                 this.versions.redo();
             } else {
-                ((PHashMap<K, V>) peek).redo();
+                ((UndoRedoDataStructure) peek).redo();
             }
             this.changes.getUndo().push(this.changes.getRedo().pop());
         }
-    }
-
-    public int getCurrentVersion() {
-        return this.versions.getCurrentVersion();
-    }
-
-    public int getVersionCount() {
-        return this.versions.getVersionCount();
     }
 
     public void clear() {
@@ -183,7 +175,13 @@ public class PHashMap<K, V> implements UndoRedoDataStructure {
         return values;
     }
 
-    public String toString() {
+    public List<Object> toList() {
+        List<Object> list = new ArrayList<>();
+        list.addAll(entrySet());
+        return list;
+    }
+
+    /* public String toString() {
         if (isEmpty()) {
             return "{}";
         }
@@ -193,28 +191,10 @@ public class PHashMap<K, V> implements UndoRedoDataStructure {
         }
         output = output.substring(0, output.length() - 2) + "}";
         return output;
-    }
+    } */
 
-    private void newVersion(Object object) {
-        if (this.parent != null) {
-            parent.changes.getUndo().push(this);
-        }
-        this.changes.getUndo().push(null);
-        this.changes.getRedo().clear();
-        this.versions.newVersion(object);
-    }
-
-    private void setParent(Object object) {
-        if (isPersistent(object)) {
-            ((PHashMap<K, V>) object).parent = this;
-        }
-    }
-
-    private boolean isPersistent(Object object) {
-        if (object instanceof PHashMap) {
-            return true;
-        }
-        return false;
+    public String toString() {
+        return toList().toString();
     }
 
     private int getHash(K key) {

@@ -17,7 +17,7 @@ public class UndoRedoStack<E> {
         this.undo.push(head);
     }
 
-    public void clone(UndoRedoStack<E> other) {
+    public void clone(UndoRedoStack other) {
         this.undo.addAll(other.getUndo());
         this.redo.addAll(other.getRedo());
     }

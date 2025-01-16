@@ -156,50 +156,6 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testNestedUndoRedo() {
-        PDoublyLinkedList<PDoublyLinkedList<Integer>> parent = new PDoublyLinkedList<>();
-        PDoublyLinkedList<Integer> lst1 = new PDoublyLinkedList<>();
-        PDoublyLinkedList<Integer> lst2 = new PDoublyLinkedList<>();
-        PDoublyLinkedList<Integer> lst3 = new PDoublyLinkedList<>();
-
-        parent.addAll(Arrays.asList(lst1, lst2));
-        assertEquals("[[], []]", parent.toString());
-
-        parent.get(0).add(1);
-        parent.get(0).add(2);
-        parent.get(1).add(3);
-        parent.get(1).add(4);
-        assertEquals("[[1, 2], [3, 4]]", parent.toString());
-
-        parent.undo();
-        assertEquals("[[1, 2], [3]]", parent.toString());
-
-        parent.undo();
-        parent.undo();
-        assertEquals("[[1], []]", parent.toString());
-
-        parent.redo();
-        parent.redo();
-        assertEquals("[[1, 2], [3]]", parent.toString());
-
-        parent.add(1, lst3);
-        assertEquals("[[1, 2], [], [3]]", parent.toString());
-
-        parent.get(1).add(4);
-        assertEquals("[[1, 2], [4], [3]]", parent.toString());
-
-        parent.get(2).add(5);
-        assertEquals("[[1, 2], [4], [3, 5]]", parent.toString());
-
-        parent.undo();
-        parent.undo();
-        assertEquals("[[1, 2], [], [3]]", parent.toString());
-
-        parent.undo();
-        assertEquals("[[1, 2], [3]]", parent.toString());
-    }
-
-    @Test
     void testPairs() {
         lst.addAll(Arrays.asList(1, 2, 3, 4));
         
@@ -252,5 +208,150 @@ class TestPDoublyLinkedList {
         lst.add(1, 8);
         assertEquals("[5, 8, 7, 4, 6]", lst.toString());
         assertEquals("[6, 5, 7, 4, 8, null]", lst.toArray().toString());
+    }
+
+    @Test
+    void testNestedUndoRedoPDoublyLinkedList() {
+        PDoublyLinkedList<PDoublyLinkedList<Integer>> parent = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> lst1 = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> lst2 = new PDoublyLinkedList<>();
+        PDoublyLinkedList<Integer> lst3 = new PDoublyLinkedList<>();
+
+        parent.addAll(Arrays.asList(lst1, lst2));
+        assertEquals("[[], []]", parent.toString());
+
+        parent.get(0).add(1);
+        parent.get(0).add(2);
+        parent.get(1).add(3);
+        parent.get(1).add(4);
+        assertEquals("[[1, 2], [3, 4]]", parent.toString());
+
+        parent.undo();
+        assertEquals("[[1, 2], [3]]", parent.toString());
+
+        parent.undo();
+        parent.undo();
+        assertEquals("[[1], []]", parent.toString());
+
+        parent.redo();
+        parent.redo();
+        assertEquals("[[1, 2], [3]]", parent.toString());
+
+        parent.add(1, lst3);
+        assertEquals("[[1, 2], [], [3]]", parent.toString());
+
+        parent.get(1).add(4);
+        assertEquals("[[1, 2], [4], [3]]", parent.toString());
+
+        parent.get(2).add(5);
+        assertEquals("[[1, 2], [4], [3, 5]]", parent.toString());
+
+        parent.undo();
+        parent.undo();
+        assertEquals("[[1, 2], [], [3]]", parent.toString());
+
+        parent.undo();
+        assertEquals("[[1, 2], [3]]", parent.toString());
+    }
+
+    @Test
+    void testNestedUndoRedoPArray() {
+        PDoublyLinkedList<PArray<Integer>> parent = new PDoublyLinkedList<>();
+        PArray<Integer> arr1 = new PArray<>();
+        PArray<Integer> arr2 = new PArray<>();
+        PArray<Integer> arr3 = new PArray<>();
+
+        parent.addAll(Arrays.asList(arr1, arr2));
+        assertEquals("[[], []]", parent.toString());
+
+        parent.get(0).add(1);
+        parent.get(0).add(2);
+        parent.get(1).add(3);
+        parent.get(1).add(4);
+        assertEquals("[[1, 2], [3, 4]]", parent.toString());
+
+        parent.undo();
+        assertEquals("[[1, 2], [3]]", parent.toString());
+
+        parent.undo();
+        parent.undo();
+        assertEquals("[[1], []]", parent.toString());
+
+        parent.redo();
+        parent.redo();
+        assertEquals("[[1, 2], [3]]", parent.toString());
+
+        parent.add(1, arr3);
+        assertEquals("[[1, 2], [], [3]]", parent.toString());
+
+        parent.get(1).add(4);
+        assertEquals("[[1, 2], [4], [3]]", parent.toString());
+
+        parent.get(2).add(5);
+        assertEquals("[[1, 2], [4], [3, 5]]", parent.toString());
+
+        parent.undo();
+        parent.undo();
+        assertEquals("[[1, 2], [], [3]]", parent.toString());
+
+        parent.undo();
+        assertEquals("[[1, 2], [3]]", parent.toString());
+    }
+
+    @Test
+    void testNestedUndoRedoPHashMap() {
+        PDoublyLinkedList<PHashMap<String, Integer>> parent = new PDoublyLinkedList<>();
+        PHashMap<String, Integer> map1 = new PHashMap<>();
+        PHashMap<String, Integer> map2 = new PHashMap<>();
+        PHashMap<String, Integer> map3 = new PHashMap<>();
+
+        parent.addAll(Arrays.asList(map1, map2));
+        assertEquals("[[], []]", parent.toString());
+
+        parent.get(0).put("A", 1);
+        parent.get(0).put("B", 2);
+        parent.get(1).put("C", 3);
+        assertTrue(parent.get(0).toString().contains("A:1"));
+        assertTrue(parent.get(0).toString().contains("B:2"));
+        assertTrue(parent.get(1).toString().contains("C:3"));
+
+        parent.undo();
+        assertTrue(parent.get(0).toString().contains("A:1"));
+        assertTrue(parent.get(0).toString().contains("B:2"));
+        assertFalse(parent.get(1).toString().contains("C:3"));
+
+        parent.redo();
+        assertTrue(parent.get(0).toString().contains("A:1"));
+        assertTrue(parent.get(0).toString().contains("B:2"));
+        assertTrue(parent.get(1).toString().contains("C:3"));
+
+        parent.add(map3);
+        parent.get(2).put("D", 4);
+        assertTrue(parent.get(0).toString().contains("A:1"));
+        assertTrue(parent.get(0).toString().contains("B:2"));
+        assertTrue(parent.get(1).toString().contains("C:3"));
+        assertTrue(parent.get(2).toString().contains("D:4"));
+
+        parent.get(2).put("E", 5);
+        assertTrue(parent.get(0).toString().contains("A:1"));
+        assertTrue(parent.get(0).toString().contains("B:2"));
+        assertTrue(parent.get(1).toString().contains("C:3"));
+        assertTrue(parent.get(2).toString().contains("D:4"));
+        assertTrue(parent.get(2).toString().contains("E:5"));
+
+        parent.undo();
+        parent.undo();
+        assertTrue(parent.get(0).toString().contains("A:1"));
+        assertTrue(parent.get(0).toString().contains("B:2"));
+        assertTrue(parent.get(1).toString().contains("C:3"));
+        assertTrue(parent.size() == 3);
+        assertFalse(parent.get(2).toString().contains("D:4"));
+        assertFalse(parent.get(2).toString().contains("E:5"));
+
+        parent.undo();
+        assertTrue(parent.get(0).toString().contains("A:1"));
+        assertTrue(parent.get(0).toString().contains("B:2"));
+        assertTrue(parent.get(1).toString().contains("C:3"));
+        assertFalse(parent.size() == 3);
     }
 }

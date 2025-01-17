@@ -3,28 +3,32 @@ package pds;
 import java.util.ArrayList;
 import java.util.List;
 
-import pds.SubClasses.TrieClasses.Head;
-import pds.SubClasses.TrieClasses.Node;
+import pds.SubClasses.CopyPathClasses.Head;
+import pds.SubClasses.CopyPathClasses.Node;
 import pds.SubClasses.UndoRedoClasses.UndoRedoDataStructure;
 import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
 
 /**
- * Персистентный массив
- * @value height - высота дерева
- * @value bitsPerNode - число бит на каждую ноду дерева
+ * Персистентный массив.
+ * @param <E> тип элементов в массиве
  */
 @SuppressWarnings("unchecked")
 public class PArray<E> extends UndoRedoDataStructure {
-
+    
+    /* Высота (глубина) двоичного дерева персистентного массива */
     private int height;
+    /* Число бит на каждую ноду двоичного дерева персистентного массива */
     private int bitsPerNode;
-    private int mask;
+    /* Максимальный размер персистентного массива */
     private int maxSize;
+    /* Маска для реализации алгоритма bit partitioning */
+    private int mask;
 
-    public PArray() {
-        this(3, 2);
-    }
-
+    /**
+     * Конструктор класса.
+     * @param height высота (глубина) двоичного дерева персистентного массива
+     * @param bitsPerNode число бит на каждую ноду двоичного дерева персистентного массива
+     */
     public PArray(int height, int bitsPerNode) {
         super();
         this.height = height;
@@ -36,109 +40,27 @@ public class PArray<E> extends UndoRedoDataStructure {
         this.changes = new UndoRedoStack<>();
     }
 
+    /**
+     * Конструктор класса со значениями по умолчанию (heigth = 3, bitsPerNode = 2).
+     */
+    public PArray() {
+        this(3, 2);
+    }
+
+    /**
+     * Конструктор класса.
+     * @param other объект класса PArray
+     */
     public PArray(PArray<E> other) {
         this(other.height, other.bitsPerNode);
         this.versions.clone(other.versions);
         this.changes.clone(other.changes);
     }
 
-    public boolean add(E value) {
-        setParent(value);
-        Head<E> head = new Head<>(this.bitsPerNode);
-        head.clone(getHead());
-        checkIfFull(head);
-        newVersion(head);
-        add(head, value);
-        return true;
-    }
-
-    public void add(int index, E value) {
-        setParent(value);
-        Head<E> oldHead = getHead();
-        checkIfFull(oldHead);
-        checkIndex(oldHead, index);
-        Node<E> node = partCopyPath(oldHead, index);
-        node.set(index & this.mask, value);
-        Head<E> newHead = getHead();
-        for (int i = index; i < oldHead.size(); i++) {
-            add(newHead, (E) get(oldHead, i));
-        }
-    }
-
-    public boolean addAll(List<E> values) {
-        Head<E> head = new Head<>(this.bitsPerNode);
-        checkIfFull(head, values.size());
-        head.clone(getHead());
-        newVersion(head);
-        for (int i = 0; i < values.size(); i++) {
-            E value = values.get(i);
-            setParent(value);
-            add(head, value);
-        }
-        return true;
-    }
-
-    public void clear() {
-        Head<E> head = new Head<>(this.bitsPerNode);
-        newVersion(head);
-    }
-
-    public E get(int index) {
-        Head<E> head = getHead();
-        return get(head, index);
-    }
-
-    public boolean isEmpty() {
-        return size() == 0;
-    }
-
-    public boolean isFull() {
-        return isFull(getHead());
-    }
-
-    public E remove(int index) {
-        Head<E> oldHead = getHead();
-        checkIndex(oldHead, index);
-        checkIfEmpty(oldHead);
-        Node<E> node = partCopyPath(oldHead, index);
-        E value = (E) node.pop();
-        Head<E>newHead = getHead();
-        newHead.setSize(newHead.size() - 1);
-        for (int i = index + 1; i < oldHead.size(); i++) {
-            add(newHead, (E) get(oldHead, i));
-        }
-        return value;
-    }
-
-    public E set(int index, E value) {
-        setParent(value);
-        Head<E> oldHead = getHead();
-        checkIfEmpty(oldHead);
-        checkIndex(oldHead, index);
-        Head<E> newHead = new Head<>(this.bitsPerNode);
-        newHead.clone(oldHead);
-        newVersion(newHead);
-        E prevValue = get(newHead, index);
-        set(newHead, index, value);
-        return prevValue;
-    }
-
-    public int size() {
-        return getHead().size();
-    }
-
-    public int maxSize() {
-        return this.maxSize;
-    }
-    
-    public int getBitsPerNode() {
-        return this.bitsPerNode;
-    }
-
-    public int getheight() {
-        return this.height;
-    }
-
+    /**
+     * Преобразует персистентный массив в список.
+     * @return список, содержащий элементы персистентного массива
+     */
     public List<Object> toList() {
         List<Object> values;
         Head<E> Head = getHead();
@@ -163,8 +85,185 @@ public class PArray<E> extends UndoRedoDataStructure {
         return values;  
     }
 
-    public String toString() {
-        return this.toList().toString();
+    /**
+     * Возвращает true, если элемент присутствует в персистентом массиве.
+     * @param value элемент
+     * @return true, если элемент присутствует в персистентом массиве; false, иначе
+     */
+    public boolean contains(Object value) {
+        if (toList().contains(value)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Возвращает индекс элемента в персистентном массиве.
+     * @param value элемент
+     * @return индекс элемента в персистентом массиве, если присутствует; -1, иначе
+     */
+    public int indexOf(Object value) {
+        List<Object> values = toList(); 
+        if (values.contains(value)) {
+            return values.indexOf(value);
+        }
+        return -1;
+    }
+
+    /**
+     * Возвращает количество элементов в персистентном массиве.
+     * @return количество элементов в персистентном массиве
+     */
+    public int size() {
+        return getHead().size();
+    }
+
+    /**
+     * Возвращает true, если персистентный массив пустой.
+     * @return true, если персистентный массив пустой; false, если иначе
+     */
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    /**
+     * Возвращает true, если персистентный массив полный.
+     * @return true, если персистентный массив полный; false, если иначе
+     */
+    public boolean isFull() {
+        return isFull(getHead());
+    }
+
+
+    /**
+     * Возвращает из персистентного массива элемент по индексу.
+     * @param index индекс элемента в персистентном массиве
+     * @return элемент из персистентного массива
+     */
+    public E get(int index) {
+        Head<E> head = getHead();
+        return get(head, index);
+    }
+
+    /**
+     * Добавляет элемент в конец персистентного массива.
+     * @param value добавляемый элемент
+     * @return true, если элемент был добавлен в персистентный массив
+     */
+    public boolean add(E value) {
+        setParent(value);
+        Head<E> head = new Head<>(this.bitsPerNode);
+        head.clone(getHead());
+        checkIfFull(head);
+        newVersion(head);
+        add(head, value);
+        return true;
+    }
+
+    /**
+     * Добавляет элемент в персистентный массив по индексу.
+     * @param index индекс в персистентном массиве
+     * @param value добавляемый элемент
+     */
+    public void add(int index, E value) {
+        setParent(value);
+        Head<E> oldHead = getHead();
+        checkIfFull(oldHead);
+        checkIndex(oldHead, index);
+        Node<E> node = partCopyPath(oldHead, index);
+        node.set(index & this.mask, value);
+        Head<E> newHead = getHead();
+        for (int i = index; i < oldHead.size(); i++) {
+            add(newHead, (E) get(oldHead, i));
+        }
+    }
+
+    /**
+     * Добавляет все элементы из списка в конец персистентного массива.
+     * @param values список, содержащий добавляемые элементы
+     * @return true, если все элементы из списка были добавлены в персистентный массив
+     */
+    public boolean addAll(List<E> values) {
+        Head<E> head = new Head<>(this.bitsPerNode);
+        checkIfFull(head, values.size());
+        head.clone(getHead());
+        newVersion(head);
+        for (int i = 0; i < values.size(); i++) {
+            E value = values.get(i);
+            setParent(value);
+            add(head, value);
+        }
+        return true;
+    }
+
+    /**
+     * Заменяет элемент из персистентного массива на новый.
+     * @param index индекс элемента
+     * @param value новый элемент
+     * @return элемент до замены
+     */
+    public E set(int index, E value) {
+        setParent(value);
+        Head<E> oldHead = getHead();
+        checkIfEmpty(oldHead);
+        checkIndex(oldHead, index);
+        Head<E> newHead = new Head<>(this.bitsPerNode);
+        newHead.clone(oldHead);
+        newVersion(newHead);
+        E prevValue = get(newHead, index);
+        set(newHead, index, value);
+        return prevValue;
+    }
+
+    /**
+     * Удаляет элемент из персистентного массива по индексу.
+     * @param index индекс элемента
+     * @return удаленный из персистентного массива элемент
+     */
+    public E remove(int index) {
+        Head<E> oldHead = getHead();
+        checkIndex(oldHead, index);
+        checkIfEmpty(oldHead);
+        Node<E> node = partCopyPath(oldHead, index);
+        E value = (E) node.pop();
+        Head<E>newHead = getHead();
+        newHead.setSize(newHead.size() - 1);
+        for (int i = index + 1; i < oldHead.size(); i++) {
+            add(newHead, (E) get(oldHead, i));
+        }
+        return value;
+    }
+
+    /**
+     * Удаляет все элементы из персистентного массива.
+     */
+    public void clear() {
+        Head<E> head = new Head<>(this.bitsPerNode);
+        newVersion(head);
+    }
+
+    /**
+     * Возвращает максимальный размер персистентного массива.
+     * @return максимальный размер персистентного массива
+     */
+    public int maxSize() {
+        return this.maxSize;
+    }
+    
+    /**
+     * Возвращает число бит на каждую ноду двоичного дерева персистентного массива.
+     * @return число бит на каждую ноду двоичного дерева
+     */
+    public int getBitsPerNode() {
+        return this.bitsPerNode;
+    }
+
+    /**
+     * Возвращает высоту (глубину) двоичного дерева персистентного массива.
+     * @return высота двоичного дерева
+     */
+    public int getheight() {
+        return this.height;
     }
 
     private Node<E> copyPath(Head<E> Head, int index) {
@@ -248,25 +347,25 @@ public class PArray<E> extends UndoRedoDataStructure {
 
     private void checkIfFull(Head<E> head) {
         if (isFull(head)) {
-            throw new IllegalStateException("Array is full");
+            throw new IllegalStateException("Достигнуто максимальное число элементов в персистентном массиве");
         }
     }
 
     private void checkIfFull(Head<E> head, int delta) {
         if (head.size() + delta > this.maxSize) {
-            throw new IllegalStateException("Array is full");
+            throw new IllegalStateException("Достигнуто максимальное число элементов в персистентном массиве");
         }
     }
     
     private void checkIfEmpty(Head<E> head) {
         if (head.size() == 0) {
-            throw new IllegalStateException("Array is empty");
+            throw new IllegalStateException("Персистентный массив пуст");
         }
     }
 
     private void checkIndex(Head<E> head, int index) {
         if ((index < 0) || (index >= head.size())) {
-            throw new IndexOutOfBoundsException("Invalid index");
+            throw new IndexOutOfBoundsException("Неверный индекс элемента в персистентном массиве");
         }
     }
 }

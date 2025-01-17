@@ -1,4 +1,4 @@
-package pds.SubClasses.TrieClasses;
+package pds.SubClasses.CopyPathClasses;
 
 import java.util.LinkedList;
 

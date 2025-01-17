@@ -9,6 +9,7 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
+    id 'java'
 }
 
 repositories {
@@ -39,4 +40,8 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(23)
     }
+}
+
+javadoc {
+    destinationDir = file("${buildDir}/docs/javadoc")
 }

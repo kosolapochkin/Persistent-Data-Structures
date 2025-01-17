@@ -3,29 +3,33 @@ package pds;
 import java.util.ArrayList;
 import java.util.List;
 
+import pds.SubClasses.CopyPathClasses.HeadList;
+import pds.SubClasses.CopyPathClasses.Node;
 import pds.SubClasses.PDoublyLinkedListClasses.ListNode;
-import pds.SubClasses.TrieClasses.HeadList;
-import pds.SubClasses.TrieClasses.Node;
 import pds.SubClasses.UndoRedoClasses.UndoRedoDataStructure;
 import pds.SubClasses.UndoRedoClasses.UndoRedoStack;
 
 /**
  * Персистентный двусвязный список
- * @value height - высота дерева
- * @value bitsPerNode - число бит на каждую ноду дерева
+ * @param <E> тип элементов в списке
  */
 @SuppressWarnings("unchecked")
 public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
 
+    /* Высота (глубина) двоичного дерева персистентного списка */
     private int height;
+    /* Число бит на каждую ноду двоичного дерева персистентного списка */
     private int bitsPerNode;
-    private int mask;
+    /* Максимальный размер персистентного списка */
     private int maxSize;
+    /* Маска для реализации алгоритма bit partitioning */
+    private int mask;
 
-    public PDoublyLinkedList() {
-        this(3, 2);
-    }
-
+    /**
+     * Конструктор класса.
+     * @param height высота (глубина) двоичного дерева персистентного списка
+     * @param bitsPerNode число бит на каждую ноду двоичного дерева персистентного списка
+     */
     public PDoublyLinkedList(int height, int bitsPerNode) {
         super();
         this.height = height;
@@ -37,12 +41,112 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
         this.changes = new UndoRedoStack<>();
     }
 
+    /**
+     * Конструктор класса со значениями по умолчанию (heigth = 3, bitsPerNode = 2).
+     */
+    public PDoublyLinkedList() {
+        this(3, 2);
+    }
+
+    /**
+     * Конструктор класса.
+     * @param other объект класса PDoublyLinkedList
+     */
     public PDoublyLinkedList(PDoublyLinkedList<E> other) {
         this(other.height, other.bitsPerNode);
         this.versions.clone(other.versions);
         this.changes.clone(other.changes);
     }
 
+    /**
+     * Преобразует персистентный список в список.
+     * @return список, содержащий элементы персистентного списка
+     */
+    public List<Object> toList() {
+        List<Object> values;
+        HeadList<ListNode<E>> head = getHead();
+        if (head != null) {
+            values = new ArrayList<>(head.getSize());
+            Integer index = head.getFirst();
+            for (int i = 0; i < head.getSize(); i++) {
+                ListNode<E> listElement = getListNode(index);
+                Object value = listElement.getValue();
+                if (value instanceof UndoRedoDataStructure) {
+                    value = ((UndoRedoDataStructure) value).toList();
+                }
+                values.add((E) value);
+                index = listElement.getNext();
+            }
+        } else {
+            values = new ArrayList<>(0);
+        }
+        return values;  
+    }
+
+    /**
+     * Возвращает true, если элемент присутствует в персистентом списке.
+     * @param value элемент
+     * @return true, если элемент присутствует в персистентом списке; false, иначе
+     */
+    public boolean contains(Object value) {
+        if (toList().contains(value)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Возвращает индекс элемента в персистентном списке.
+     * @param value элемент
+     * @return индекс элемента в персистентом списке, если присутствует; -1, иначе
+     */
+    public int indexOf(Object value) {
+        List<Object> values = toList(); 
+        if (values.contains(value)) {
+            return values.indexOf(value);
+        }
+        return -1;
+    }
+
+    /**
+     * Возвращает количество элементов в персистентном списке.
+     * @return количество элементов в персистентном списке
+     */
+    public int size() {
+        return getHead().getSize();
+    }
+
+    /**
+     * Возврщает true, если персистентный список пустой.
+     * @return true, если персистентный список пустой; false, если иначе
+     */
+    public boolean isEmpty() {
+        return isEmpty(getHead());
+    }
+
+    /**
+     * Возвращает true, если персистентный список полный.
+     * @return true, если персистентный список полный; false, если иначе
+     */
+    public boolean isFull() {
+        return isFull(getHead(), 0);
+    }
+
+    /**
+     * Возвращает из персистентного списка элемент по индексу.
+     * @param index индекс элемента в персистентном списке
+     * @return элемент из персистентного списка
+     */
+    public E get(int index) {
+        index = getWidthIndex(index);
+        return getListNode(index).getValue();
+    }
+
+    /**
+     * Добавляет элемент в конец персистентного списка.
+     * @param value добавляемый элемент
+     * @return true, если элемент был добавлен в персистентный список
+     */
     public boolean add(E value) {
         setParent(value);
         HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
@@ -53,6 +157,11 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
         return true;
     }
 
+    /**
+     * Добавляет элемент в персистентный список по индексу.
+     * @param index индекс в персистентном списке
+     * @param value добавляемый элемент
+     */
     public void add(int index, E value) {
         HeadList<ListNode<E>> newHead;
         Node<ListNode<E>> node;
@@ -106,6 +215,11 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
         }
     }
 
+    /**
+     * Добавляет все элементы из списка в конец персистентного списка.
+     * @param values список, содержащий добавляемые элементы
+     * @return true, если все элементы из списка были добавлены в персистентный список
+     */
     public boolean addAll(List<E> values) {
         HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
         checkIfFull(head, values.size());
@@ -119,24 +233,30 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
         return true;
     }
 
-    public void clear() {
-        HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
-        newVersion(head);
+    /**
+     * Заменяет элемент из персистентного списка на новый.
+     * @param index индекс элемента
+     * @param value новый элемент
+     * @return элемент до замены
+     */
+    public E set(int index, E value) {
+        setParent(value);
+        HeadList<ListNode<E>> oldHead = getHead();
+        checkIfEmpty(oldHead);
+        checkListIndex(oldHead, index);
+        HeadList<ListNode<E>> newHead = new HeadList<>(this.bitsPerNode);
+        newHead.clone(oldHead);
+        newVersion(newHead);
+        E prevValue = get(index);
+        set(newHead, index, value);
+        return prevValue;
     }
 
-    public E get(int index) {
-        index = getWidthIndex(index);
-        return getListNode(index).getValue();
-    }
-
-    public boolean isEmpty() {
-        return isEmpty(getHead());
-    }
-
-    private boolean isFull(HeadList<ListNode<E>> head, int extra) {
-        return head.getSize() + extra >= maxSize;
-    }
-
+    /**
+     * Удаляет элемент из персистентного списка по индексу.
+     * @param index индекс элемента
+     * @return удаленный из персистентного списка элемент
+     */
     public E remove(int index) {
         HeadList<ListNode<E>> oldHead = getHead();
         checkListIndex(oldHead, index);
@@ -194,56 +314,42 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
         return result;
     }
 
-    public E set(int index, E value) {
-        setParent(value);
-        HeadList<ListNode<E>> oldHead = getHead();
-        checkIfEmpty(oldHead);
-        checkWidthIndex(oldHead, index);
-        HeadList<ListNode<E>> newHead = new HeadList<>(this.bitsPerNode);
-        newHead.clone(oldHead);
-        newVersion(newHead);
-        E prevValue = get(index);
-        set(newHead, index, value);
-        return prevValue;
-    }
-
-    public int size() {
-        return getHead().getSize();
+    /**
+     * Удаляет все элементы из персистентного списка.
+     */
+    public void clear() {
+        HeadList<ListNode<E>> head = new HeadList<>(this.bitsPerNode);
+        newVersion(head);
     }
     
+    /**
+     * Возвращает максимальный размер персистентного списка.
+     * @return максимальный размер персистентного списка
+     */
     public int maxSize() {
         return this.maxSize;
     }
 
+    /**
+     * Возвращает число бит на каждую ноду двоичного дерева персистентного списка.
+     * @return число бит на каждую ноду двоичного дерева
+     */
     public int getBitsPerNode() {
         return this.bitsPerNode;
     }
 
+    /**
+     * Возвращает высоту (глубину) двоичного дерева персистентного списка.
+     * @return высота двоичного дерева
+     */
     public int getheight() {
         return this.height;
     }
 
-    public List<Object> toList() {
-        List<Object> values;
-        HeadList<ListNode<E>> head = getHead();
-        if (head != null) {
-            values = new ArrayList<>(head.getSize());
-            Integer index = head.getFirst();
-            for (int i = 0; i < head.getSize(); i++) {
-                ListNode<E> listElement = getListNode(index);
-                Object value = listElement.getValue();
-                if (value instanceof UndoRedoDataStructure) {
-                    value = ((UndoRedoDataStructure) value).toList();
-                }
-                values.add((E) value);
-                index = listElement.getNext();
-            }
-        } else {
-            values = new ArrayList<>(0);
-        }
-        return values;  
-    }
-
+    /**
+     * Преобразует персистентный список в список, содержащий элементы в порядке их хранения в двоичном дереве.
+     * @return список, содержащий элементы персистентного списка
+     */
     public List<Object> toArray() {
         List<Object> values;
         HeadList<ListNode<E>> head = getHead();
@@ -268,10 +374,6 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
             values = new ArrayList<>(0);
         }
         return values;  
-    }
-
-    public String toString() {
-        return this.toList().toString();
     }
 
     private Node<ListNode<E>> copyPath(HeadList<ListNode<E>> head, int index) {
@@ -367,7 +469,6 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
     }
 
     private Node<ListNode<E>> getLeafNode(HeadList<ListNode<E>> head, int index) {
-            checkWidthIndex(head, index);
             Node<ListNode<E>> node = head.getRoot();
         for (int level = this.bitsPerNode * (this.height - 1); level > 0; level -= this.bitsPerNode) {
             int id = (index >> level) & this.mask;
@@ -384,37 +485,36 @@ public class PDoublyLinkedList<E> extends UndoRedoDataStructure {
         return head.getSize() == 0;
     }
 
+    private boolean isFull(HeadList<ListNode<E>> head, int extra) {
+        return head.getSize() + extra >= maxSize;
+    }
+
+
     private void checkIfFull() {
         if (isFull(getHead(), 0)) {
-            throw new IllegalStateException("List is full");
+            throw new IllegalStateException("Достигнуто максимальное число элементов в персистентном списке");
         }
     }
 
     private void checkIfFull(HeadList<ListNode<E>> HeadArray, int delta) {
         if (HeadArray.getSize() + delta > this.maxSize) {
-            throw new IllegalStateException("List is full");
+            throw new IllegalStateException("Достигнуто максимальное число элементов в персистентном списке");
         }
     }
 
     public void checkIfEmpty(HeadList<ListNode<E>> head) {
         if (head.getSize() == 0) {
-            throw new IllegalStateException("List is empty");
-        }
-    }
-
-    private void checkWidthIndex(HeadList<ListNode<E>> head, int index) {
-        if ((index < 0) || (index >= head.getWidth())) {
-            throw new IndexOutOfBoundsException("Invalid index");
+            throw new IllegalStateException("Персистентный список пуст");
         }
     }
 
     private void checkListIndex(int index) {
-        checkWidthIndex(getHead(), index);
+        checkListIndex(getHead(), index);
     }
 
     private void checkListIndex(HeadList<ListNode<E>> head, int index) {
         if ((index < 0) || (index >= head.getSize())) {
-            throw new IndexOutOfBoundsException("Invalid index");
+            throw new IndexOutOfBoundsException("Неверный индекс элемента в персистентном массиве");
         }
     }
 

@@ -7,22 +7,23 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TestPArray {
+class PArrayTests {
+    
     PArray<Integer> arr;
 
     @BeforeEach
-    void initPArray() {
+    void init() {
         arr = new PArray<>(3, 1);
     }
 
     @Test
-    void testAdd() {
+    void add() {
         arr.add(1);
         assertEquals("[1]", arr.toString());
     }
     
     @Test
-    void testAddByIndex() {
+    void addByIndex() {
         arr.add(1);
         arr.add(3);
         arr.add(1, 2);
@@ -30,66 +31,53 @@ class TestPArray {
     }
 
     @Test
-    void testAddAll() {
+    void addAll() {
         arr.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
         assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", arr.toString());
         assertThrowsExactly(IllegalStateException.class, () -> arr.add(9));
     }
 
     @Test
-    void testGet() {
+    void get() {
         arr.addAll(Arrays.asList(1, 2, 3, 4));
         assertEquals(2, arr.get(1));
     }
 
     @Test
-    void testSize() {
+    void contains() {
+        arr.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        assertTrue(arr.contains(2));
+        assertFalse(arr.contains(9));
+    }
+
+    @Test
+    void indexOf() {
+        arr.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        assertEquals(1, arr.indexOf(2));
+        assertEquals(-1, arr.indexOf(9));
+    }
+
+    @Test
+    void size() {
         arr.addAll(Arrays.asList(1, 2, 3, 4));
         assertEquals(4, arr.size());
     }
 
     @Test
-    void testIsEmpty() {
+    void isEmpty() {
         assertTrue(arr.isEmpty());
         arr.add(1);
         assertFalse(arr.isEmpty());
     }
 
     @Test
-    void testUndoRedo() {
-        arr.addAll(Arrays.asList(1, 2, 3, 4));
-        assertEquals(2, arr.getVersionCount());
-        assertEquals("[1, 2, 3, 4]", arr.toString());
-
-        arr.add(5);
-        assertEquals(3, arr.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5]", arr.toString());
-
-        arr.addAll(Arrays.asList(6, 7, 8));
-        assertEquals(4, arr.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", arr.toString());
-
-        arr.undo();
-        assertEquals(4, arr.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5]", arr.toString());
-
-        arr.redo();
-        assertEquals(4, arr.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", arr.toString());
-
-        arr.undo();
-        arr.undo();
-        arr.add(1);
-        assertEquals(3, arr.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 1]", arr.toString());
-
-        arr.redo();
-        assertEquals(3, arr.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 1]", arr.toString());
+    void isFull() {
+        arr.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        assertTrue(arr.isFull());
     }
 
     @Test
-    void testSet() {
+    void set() {
         arr.addAll(Arrays.asList(1, 2, 3, 4));
 
         arr.set(0, 0);
@@ -103,7 +91,7 @@ class TestPArray {
     }
 
     @Test
-    void testRemove() {
+    void remove() {
         arr.addAll(Arrays.asList(1, 2, 3, 4, 5));
 
         arr.remove(1);
@@ -116,7 +104,7 @@ class TestPArray {
     }
 
     @Test
-    void testClear() {
+    void clear() {
         arr.addAll(Arrays.asList(1, 2, 3, 4, 5));
 
         arr.clear();
@@ -127,7 +115,40 @@ class TestPArray {
     }
 
     @Test
-    void testPairs() {
+    void undoRedo() {
+        arr.addAll(Arrays.asList(1, 2, 3, 4));
+        assertEquals(2, arr.countVersions());
+        assertEquals("[1, 2, 3, 4]", arr.toString());
+
+        arr.add(5);
+        assertEquals(3, arr.countVersions());
+        assertEquals("[1, 2, 3, 4, 5]", arr.toString());
+
+        arr.addAll(Arrays.asList(6, 7, 8));
+        assertEquals(4, arr.countVersions());
+        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", arr.toString());
+
+        arr.undo();
+        assertEquals(4, arr.countVersions());
+        assertEquals("[1, 2, 3, 4, 5]", arr.toString());
+
+        arr.redo();
+        assertEquals(4, arr.countVersions());
+        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", arr.toString());
+
+        arr.undo();
+        arr.undo();
+        arr.add(1);
+        assertEquals(3, arr.countVersions());
+        assertEquals("[1, 2, 3, 4, 1]", arr.toString());
+
+        arr.redo();
+        assertEquals(3, arr.countVersions());
+        assertEquals("[1, 2, 3, 4, 1]", arr.toString());
+    }
+
+    @Test
+    void cloneAndChange() {
         arr.addAll(Arrays.asList(1, 2, 3, 4));
         
         PArray<Integer> arrCopy = new PArray<>(arr);
@@ -147,7 +168,7 @@ class TestPArray {
     }
 
     @Test
-    void testNestedUndoRedoPArray() {
+    void cascadePArray() {
         PArray<PArray<Integer>> parent = new PArray<>();
         PArray<Integer> arr1 = new PArray<>();
         PArray<Integer> arr2 = new PArray<>();
@@ -191,7 +212,7 @@ class TestPArray {
     }
 
     @Test
-    void testNestedUndoRedoPDoublyLinkedList() {
+    void cascadePDoublyLinkedList() {
         PArray<PDoublyLinkedList<Integer>> parent = new PArray<>();
         PDoublyLinkedList<Integer> list1 = new PDoublyLinkedList<>();
         PDoublyLinkedList<Integer> list2 = new PDoublyLinkedList<>();
@@ -235,7 +256,7 @@ class TestPArray {
     }
 
     @Test
-    void testNestedUndoRedoPHashMap() {
+    void cascadePHashMap() {
         PArray<PHashMap<String, Integer>> parent = new PArray<>();
         PHashMap<String, Integer> map1 = new PHashMap<>();
         PHashMap<String, Integer> map2 = new PHashMap<>();

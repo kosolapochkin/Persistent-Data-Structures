@@ -17,7 +17,7 @@ public class UndoRedoStack<E> {
         this.undo.push(head);
     }
 
-    public void clone(UndoRedoStack other) {
+    public void clone(UndoRedoStack<?> other) {
         this.undo.addAll(other.getUndo());
         this.redo.addAll(other.getRedo());
     }
@@ -46,11 +46,11 @@ public class UndoRedoStack<E> {
         }
     }
 
-    public int getCurrentVersion() {
+    public int currentVersion() {
         return this.undo.size() - 1;
     }
 
-    public int getVersionCount() {
+    public int countVersions() {
         return this.undo.size() + this.redo.size();
     }
 

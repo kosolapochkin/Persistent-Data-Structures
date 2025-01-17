@@ -7,23 +7,24 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TestPDoublyLinkedList {
+class PDoublyLinkedListTests {
+    
     PDoublyLinkedList<Integer> lst;
 
     @BeforeEach
-    void initPDoublyLinkedList() {
+    void init() {
         lst = new PDoublyLinkedList<>(3, 1);
     }
 
     @Test
-    void testAdd() {
+    void add() {
         lst.add(1);
         assertEquals("[1]", lst.toString());
         assertEquals("[1, null]", lst.toArray().toString());
     }
 
     @Test
-    void testAddByIndex() {
+    void addByIndex() {
         lst.add(1);
         lst.add(3);
         lst.add(1, 2);
@@ -32,7 +33,7 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testAddAll() {
+    void addAll() {
         lst.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
         assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toString());
         assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toArray().toString());
@@ -40,66 +41,46 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testGet() {
+    void get() {
         lst.addAll(Arrays.asList(1, 2, 3, 4));
         assertEquals(2, lst.get(1));
     }
 
     @Test
-    void testSize() {
+    void contains() {
+        lst.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        assertTrue(lst.contains(2));
+        assertFalse(lst.contains(9));
+    }
+
+    @Test
+    void indexOf() {
+        lst.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        assertEquals(1, lst.indexOf(2));
+        assertEquals(-1, lst.indexOf(9));
+    }
+
+    @Test
+    void size() {
         lst.addAll(Arrays.asList(1, 2, 3, 4));
         assertEquals(4, lst.size());
     }
 
     @Test
-    void testIsEmpty() {
+    void isEmpty() {
         assertTrue(lst.isEmpty());
         lst.add(1);
         assertFalse(lst.isEmpty());
     }
 
     @Test
-    void testUndoRedo() {
-        lst.addAll(Arrays.asList(1, 2, 3, 4));
-        assertEquals(2, lst.getVersionCount());
-        assertEquals("[1, 2, 3, 4]", lst.toString());
-        assertEquals("[1, 2, 3, 4]", lst.toArray().toString());
-
-        lst.add(5);
-        assertEquals(3, lst.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5]", lst.toString());
-        assertEquals("[1, 2, 3, 4, 5, null]", lst.toArray().toString());
-
-        lst.addAll(Arrays.asList(6, 7, 8));
-        assertEquals(4, lst.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toString());
-        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toArray().toString());
-
-        lst.undo();
-        assertEquals(4, lst.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5]", lst.toString());
-        assertEquals("[1, 2, 3, 4, 5, null]", lst.toArray().toString());
-
-        lst.redo();
-        assertEquals(4, lst.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toString());
-        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toArray().toString());
-
-        lst.undo();
-        lst.undo();
-        lst.add(1);
-        assertEquals(3, lst.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 1]", lst.toString());
-        assertEquals("[1, 2, 3, 4, 1, null]", lst.toArray().toString());
-
-        lst.redo();
-        assertEquals(3, lst.getVersionCount());
-        assertEquals("[1, 2, 3, 4, 1]", lst.toString());
-        assertEquals("[1, 2, 3, 4, 1, null]", lst.toArray().toString());
+    void isFull() {
+        lst.addAll(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8));
+        assertTrue(lst.isFull());
     }
 
     @Test
-    void testSet() {
+    void set() {
         lst.addAll(Arrays.asList(1, 2, 3, 4));
 
         lst.set(0, 0);
@@ -116,7 +97,7 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testRemove() {
+    void remove() {
         lst.addAll(Arrays.asList(1, 2, 3, 4, 5));
 
         lst.remove(1);
@@ -143,7 +124,7 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testClear() {
+    void clear() {
         lst.addAll(Arrays.asList(1, 2, 3, 4, 5));
 
         lst.clear();
@@ -156,7 +137,47 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testPairs() {
+    void undoRedo() {
+        lst.addAll(Arrays.asList(1, 2, 3, 4));
+        assertEquals(2, lst.countVersions());
+        assertEquals("[1, 2, 3, 4]", lst.toString());
+        assertEquals("[1, 2, 3, 4]", lst.toArray().toString());
+
+        lst.add(5);
+        assertEquals(3, lst.countVersions());
+        assertEquals("[1, 2, 3, 4, 5]", lst.toString());
+        assertEquals("[1, 2, 3, 4, 5, null]", lst.toArray().toString());
+
+        lst.addAll(Arrays.asList(6, 7, 8));
+        assertEquals(4, lst.countVersions());
+        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toString());
+        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toArray().toString());
+
+        lst.undo();
+        assertEquals(4, lst.countVersions());
+        assertEquals("[1, 2, 3, 4, 5]", lst.toString());
+        assertEquals("[1, 2, 3, 4, 5, null]", lst.toArray().toString());
+
+        lst.redo();
+        assertEquals(4, lst.countVersions());
+        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toString());
+        assertEquals("[1, 2, 3, 4, 5, 6, 7, 8]", lst.toArray().toString());
+
+        lst.undo();
+        lst.undo();
+        lst.add(1);
+        assertEquals(3, lst.countVersions());
+        assertEquals("[1, 2, 3, 4, 1]", lst.toString());
+        assertEquals("[1, 2, 3, 4, 1, null]", lst.toArray().toString());
+
+        lst.redo();
+        assertEquals(3, lst.countVersions());
+        assertEquals("[1, 2, 3, 4, 1]", lst.toString());
+        assertEquals("[1, 2, 3, 4, 1, null]", lst.toArray().toString());
+    }
+
+    @Test
+    void cloneAndChange() {
         lst.addAll(Arrays.asList(1, 2, 3, 4));
         
         PDoublyLinkedList<Integer> lstCopy = new PDoublyLinkedList<>(lst);
@@ -176,7 +197,7 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testNodePlacing() {
+    void spaceUsage() {
         lst.addAll(Arrays.asList(1, 2, 3, 4));
         assertEquals("[1, 2, 3, 4]", lst.toString());
         assertEquals("[1, 2, 3, 4]", lst.toArray().toString());
@@ -211,7 +232,7 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testNestedUndoRedoPDoublyLinkedList() {
+    void cascadePDoublyLinkedList() {
         PDoublyLinkedList<PDoublyLinkedList<Integer>> parent = new PDoublyLinkedList<>();
         PDoublyLinkedList<Integer> lst1 = new PDoublyLinkedList<>();
         PDoublyLinkedList<Integer> lst2 = new PDoublyLinkedList<>();
@@ -255,7 +276,7 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testNestedUndoRedoPArray() {
+    void cascadePArray() {
         PDoublyLinkedList<PArray<Integer>> parent = new PDoublyLinkedList<>();
         PArray<Integer> arr1 = new PArray<>();
         PArray<Integer> arr2 = new PArray<>();
@@ -299,7 +320,7 @@ class TestPDoublyLinkedList {
     }
 
     @Test
-    void testNestedUndoRedoPHashMap() {
+    void cascadePHashMap() {
         PDoublyLinkedList<PHashMap<String, Integer>> parent = new PDoublyLinkedList<>();
         PHashMap<String, Integer> map1 = new PHashMap<>();
         PHashMap<String, Integer> map2 = new PHashMap<>();

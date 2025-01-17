@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-class TestPHashMap {
+class PHashMapTests {
 
     PHashMap<String, Integer> map;
 
@@ -19,7 +19,13 @@ class TestPHashMap {
     }
 
     @Test
-    void testPutGet() {
+    void put() {
+        map.put("A", 1);
+        assertEquals("[A:1]", map.toString());
+    }
+
+    @Test
+    void get() {
         map.put("A", 1);
         assertEquals(1, map.get("A"));
         assertEquals(null, map.get("B"));
@@ -34,7 +40,7 @@ class TestPHashMap {
     }
 
     @Test
-    void testPutSize() {
+    void size() {
         map.put("A", 1);
         map.put("B", 2);
         map.put("C", 3);
@@ -42,7 +48,7 @@ class TestPHashMap {
     }
 
     @Test
-    void testPutRemove() {
+    void remove() {
         map.put("A", 1);
         map.put("B", 2);
         assertEquals(1, map.get("A"));
@@ -58,7 +64,7 @@ class TestPHashMap {
     }
 
     @Test
-    void testPutClear() {
+    void clear() {
         map.put("A", 1);
         map.put("B", 2);
         assertEquals(1, map.get("A"));
@@ -70,21 +76,37 @@ class TestPHashMap {
     }
 
     @Test
-    void testKeySet() {
+    void keySet() {
         map.put("A", 1);
         map.put("B", 2);
         assertEquals(new HashSet<>(Arrays.asList("A", "B")), map.keySet());
     }
 
     @Test
-    void testValues() {
+    void values() {
         map.put("A", 1);
         map.put("B", 2);
         assertEquals(new LinkedList<>(Arrays.asList(1, 2)), map.values());
     }
 
     @Test
-    void testUndoRedo() {
+    void containsKey() {
+        map.put("A", 1);
+        map.put("B", 2);
+        assertTrue(map.containsKey("A"));
+        assertFalse(map.containsKey("C"));
+    }
+
+    @Test
+    void containsValue() {
+        map.put("A", 1);
+        map.put("B", 2);
+        assertTrue(map.containsValue(1));
+        assertFalse(map.containsValue(3));
+    }
+
+    @Test
+    void undoRedo() {
         map.put("A", 1);
         map.put("B", 2);
         assertTrue(map.toString().contains("A:1"));
@@ -135,7 +157,45 @@ class TestPHashMap {
     }
 
     @Test
-    void testNestedUndoRedoPHashMap() {
+    void cloneAndChange() {
+        map.put("A", 1);
+        map.put("B", 2);
+
+        PHashMap<String, Integer> mapCopy = new PHashMap<>(map);
+        assertTrue(mapCopy.toString().contains("A:1"));
+        assertTrue(mapCopy.toString().contains("B:2"));
+
+        mapCopy.put("C", 3);
+        assertTrue(mapCopy.toString().contains("A:1"));
+        assertTrue(mapCopy.toString().contains("B:2"));
+        assertTrue(mapCopy.toString().contains("C:3"));
+        assertTrue(map.toString().contains("A:1"));
+        assertTrue(map.toString().contains("B:2"));
+        assertFalse(map.toString().contains("C:3"));
+
+        map.put("D", 4);
+        assertTrue(mapCopy.toString().contains("A:1"));
+        assertTrue(mapCopy.toString().contains("B:2"));
+        assertTrue(mapCopy.toString().contains("C:3"));
+        assertFalse(mapCopy.toString().contains("D:4"));
+        assertTrue(map.toString().contains("A:1"));
+        assertTrue(map.toString().contains("B:2"));
+        assertFalse(map.toString().contains("C:3"));
+        assertTrue(map.toString().contains("D:4"));
+
+        mapCopy.undo();
+        assertTrue(mapCopy.toString().contains("A:1"));
+        assertTrue(mapCopy.toString().contains("B:2"));
+        assertFalse(mapCopy.toString().contains("C:3"));
+        assertFalse(mapCopy.toString().contains("D:4"));
+        assertTrue(map.toString().contains("A:1"));
+        assertTrue(map.toString().contains("B:2"));
+        assertFalse(map.toString().contains("C:3"));
+        assertTrue(map.toString().contains("D:4"));
+    }
+
+    @Test
+    void cascadePHashMap() {
         PHashMap<String, PHashMap<String, Integer>> parent = new PHashMap<>();
         PHashMap<String, Integer> map1 = new PHashMap<>();
         PHashMap<String, Integer> map2 = new PHashMap<>();
@@ -194,7 +254,7 @@ class TestPHashMap {
     }
 
     @Test
-    void testNestedUndoRedoPArray() {
+    void cascadePArray() {
         PHashMap<String, PArray<Integer>> parent = new PHashMap<>();
         PArray<Integer> arr1 = new PArray<>();
         PArray<Integer> arr2 = new PArray<>();
@@ -254,7 +314,7 @@ class TestPHashMap {
     }
 
     @Test
-    void testNestedUndoRedoPDoublyLinkedList() {
+    void cascadePDoublyLinkedList() {
         PHashMap<String, PDoublyLinkedList<Integer>> parent = new PHashMap<>();
         PDoublyLinkedList<Integer> list1 = new PDoublyLinkedList<>();
         PDoublyLinkedList<Integer> list2 = new PDoublyLinkedList<>();

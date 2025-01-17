@@ -65,29 +65,33 @@
 ## Структура проекта
 
 ```
-└── 📁src
-    └── 📁main
-        └── 📁java
-            └── 📁pds
-                └── PArray.java
-                └── PDoublyLinkedList.java
-                └── PHashMap.java
-                └── 📁SubClasses
-                    └── 📁CopyPathClasses
-                        └── Head.java
-                        └── HeadList.java
-                        └── Node.java
-                    └── 📁PDoublyLinkedListClasses
-                        └── ListNode.java
-                    └── 📁PHashMapClasses
-                        └── MapNode.java
-                    └── 📁UndoRedoClasses
-                        └── UndoRedoDataStructure.java
-                        └── UndoRedoStack.java
-    └── 📁test
-        └── 📁java
-            └── 📁pds
-                └── PArrayTests.java
-                └── PDoublyLinkedListTests.java
-                └── PHashMapTests.java
+└── 📁lib
+    └── 📁bin
+        └── ...
+    └── 📁src
+        └── 📁main
+            └── 📁java
+                └── 📁pds
+                    └── PArray.java
+                    └── PDoublyLinkedList.java
+                    └── PHashMap.java
+                    └── 📁SubClasses
+                        └── 📁CopyPathClasses
+                            └── Head.java
+                            └── HeadList.java
+                            └── Node.java
+                        └── 📁PDoublyLinkedListClasses
+                            └── ListNode.java
+                        └── 📁PHashMapClasses
+                            └── MapNode.java
+                        └── 📁UndoRedoClasses
+                            └── UndoRedoDataStructure.java
+                            └── UndoRedoStack.java
+        └── 📁test
+            └── 📁java
+                └── 📁pds
+                    └── PArrayTests.java
+                    └── PDoublyLinkedListTests.java
+                    └── PHashMapTests.java
+    └── build.gradle
 ```
